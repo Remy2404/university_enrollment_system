@@ -3,29 +3,29 @@
 This task board tracks the progress of the University Enrollment System implementation across all 6 phases.
 
 ## Phase 1: Setup, Design System & Landing Page
-- [ ] **1.1 Setup Base Design System & Styles**
-  - [ ] Configure Tailwind CSS variables / custom stylesheet theme in [globals.css](file:///d:/university_enrollment_system/app/globals.css)
-  - [ ] Set up Inter / Plus Jakarta Sans / Geist Sans font variables
-  - [ ] Define global colors (navy, slate gray, cool gray, success green, warning amber, error red)
-- [ ] **1.2 Create Base UI Layout Components**
-  - [ ] Implement `AppSidebar` (responsive desktop sidebar, collapsible tablet menu, mobile bottom drawer)
-  - [ ] Implement `TopBar` (user profile dropdown, system status indicator)
-- [ ] **1.3 Build Shared Core UI Components**
-  - [ ] Implement `BentoCard` (16px-24px rounded corners, subtle shadows, hover transitions)
-  - [ ] Implement `StatusBadge` (styled colors for Approved, Pending, Rejected, Draft, and Submitted states)
-  - [ ] Implement `Button` (primary, secondary, danger variations)
-  - [ ] Implement `States` components (`EmptyState`, `LoadingState`, `ErrorState`)
-- [ ] **1.4 Implement Landing Page**
-  - [ ] Implement Hero section with title, subtitle, and CTA actions
-  - [ ] Implement Enrollment Steps visual card section
-  - [ ] Implement Available Programs preview cards
-  - [ ] Implement Requirements Summary list
-  - [ ] Implement Important Dates timeline preview
-  - [ ] Implement Footer with academic branding
-- [ ] **1.5 Setup & Validate Mock Database**
-  - [ ] Configure [db.json](file:///d:/university_enrollment_system/db.json) with comprehensive seed data (users, applications, documents, faculties, majors)
-  - [ ] Verify mock server runs via `json-server` and exposes all necessary endpoints
-  - [ ] Test mock database CRUD functionality for applications and documents
+- [x] **1.1 Setup Base Design System & Styles**
+  - [x] Configure Tailwind CSS variables / custom stylesheet theme in [globals.css](file:///d:/university_enrollment_system/app/globals.css)
+  - [x] Set up Inter / Plus Jakarta Sans / Geist Sans font variables
+  - [x] Define global colors (navy, slate gray, cool gray, success green, warning amber, error red)
+- [x] **1.2 Create Base UI Layout Components**
+  - [x] Implement `AppSidebar` (responsive desktop sidebar, collapsible tablet menu, mobile bottom drawer)
+  - [x] Implement `TopBar` (user profile dropdown, system status indicator)
+- [x] **1.3 Build Shared Core UI Components**
+  - [x] Implement `BentoCard` (16px-24px rounded corners, subtle shadows, hover transitions)
+  - [x] Implement `StatusBadge` (styled colors for Approved, Pending, Rejected, Draft, and Submitted states)
+  - [x] Implement `Button` (primary, secondary, danger variations)
+  - [x] Implement `States` components (`EmptyState`, `LoadingState`, `ErrorState`)
+- [x] **1.4 Implement Landing Page**
+  - [x] Implement Hero section with title, subtitle, and CTA actions
+  - [x] Implement Enrollment Steps visual card section
+  - [x] Implement Available Programs preview cards
+  - [x] Implement Requirements Summary list
+  - [x] Implement Important Dates timeline preview
+  - [x] Implement Footer with academic branding
+- [x] **1.5 Setup & Validate Mock Database**
+  - [x] Configure [db.json](file:///d:/university_enrollment_system/db.json) with comprehensive seed data (users, applications, documents, faculties, majors)
+  - [x] Verify mock server runs via `json-server` and exposes all necessary endpoints
+  - [x] Test mock database CRUD functionality for applications and documents
 
 ---
 
