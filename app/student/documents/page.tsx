@@ -3,15 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FolderOpen, X, Eye, FileText, ArrowRight } from "lucide-react";
+import { FolderOpen, X, FileText, ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "../../components/ui/Button";
-import { BentoCard } from "../../components/ui/BentoCard";
 import { DocumentStatusCard } from "../../components/ui/DocumentStatusCard";
 import { FileUploadDropzone } from "../../components/ui/FileUploadDropzone";
 import { LoadingState } from "../../components/ui/States";
 
 import { applicationService, documentService } from "@/src/services/application";
 import { Application, ApplicationDocument } from "@/src/types";
+import { useAuth } from "@/src/providers/auth-provider";
 
 const documentTypes = [
   { type: "national_id" as const, label: "National ID Card" },
@@ -23,7 +23,7 @@ const documentTypes = [
 
 export default function StudentDocumentsPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, loading: isAuthLoading } = useAuth();
   const [appRecord, setAppRecord] = useState<Application | null>(null);
   const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,23 +35,7 @@ export default function StudentDocumentsPage() {
   // Preview modal state
   const [activePreviewDoc, setActivePreviewDoc] = useState<ApplicationDocument | null>(null);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (!stored) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const user = JSON.parse(stored);
-      setUserId(user.id);
-      loadDocumentsContext(user.id);
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
-
-  const loadDocumentsContext = async (uid: string) => {
+  async function loadDocumentsContext(uid: string) {
     try {
       const app = await applicationService.getByStudentId(uid);
       if (!app) {
@@ -63,59 +47,50 @@ export default function StudentDocumentsPage() {
 
       const docs = await documentService.getByApplicationId(app.id);
       setDocuments(docs);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load documents context.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => void loadDocumentsContext(user.id), 0);
+    return () => window.clearTimeout(timeoutId);
+    // The loader is route-context bound and intentionally invoked only on auth changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthLoading, router, user]);
 
   const handleFileSelect = async (file: File) => {
-    if (!activeUploadType || !appRecord || !userId) return;
-    const typeLabel = documentTypes.find(d => d.type === activeUploadType)?.label || "File";
+    if (!activeUploadType || !appRecord || !user) return;
 
-    // Close upload dropzone immediately to show status progress card
     const targetType = activeUploadType;
     setActiveUploadType(null);
-
-    // Simulate progress upload
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(prev => ({ ...prev, [targetType]: progress }));
-      if (progress >= 100) {
-        clearInterval(interval);
-        finalizeUpload(file, targetType);
-      }
-    }, 150);
-  };
-
-  const finalizeUpload = async (file: File, type: typeof documentTypes[number]["type"]) => {
-    if (!appRecord || !userId) return;
+    setUploadProgress((prev) => ({ ...prev, [targetType]: 50 }));
 
     try {
-      await documentService.create({
+      await documentService.upload({
         applicationId: appRecord.id,
-        studentId: userId,
-        type,
-        name: file.name,
-        url: `/uploads/${file.name}`,
-        status: "under_review",
-        uploadedAt: new Date().toISOString(),
-        rejectReason: "",
+        studentId: user.id,
+        type: targetType,
+        file,
       });
 
       toast.success(`${file.name} uploaded successfully.`);
-      
-      // Refresh documents
       const docs = await documentService.getByApplicationId(appRecord.id);
       setDocuments(docs);
-    } catch {
-      toast.error("Failed to save document metadata.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload document.");
     } finally {
       setUploadProgress(prev => {
         const copy = { ...prev };
-        delete copy[type];
+        delete copy[targetType];
         return copy;
       });
     }
@@ -169,7 +144,7 @@ export default function StudentDocumentsPage() {
 
       {isLocked && (
         <div className="p-4 bg-slate-50 border border-[#E2E8F0] rounded-bento text-sm text-slate-gray leading-relaxed">
-          🔒 **Locked View**: Your application status is currently <span className="font-bold text-primary-navy">"{appRecord?.status.replace("_", " ")}"</span>. Files cannot be modified or replaced unless a correction is requested by admission staff.
+          <span className="font-bold text-primary-navy">Locked view:</span> Your application status is currently <span className="font-bold text-primary-navy">&quot;{appRecord?.status.replace("_", " ")}&quot;</span>. Files cannot be modified or replaced unless a correction is requested by admission staff.
         </div>
       )}
 
@@ -229,16 +204,18 @@ export default function StudentDocumentsPage() {
               </button>
             </div>
 
-            {/* Mock Preview Content */}
             <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed border-[#E2E8F0] rounded-bento text-center">
               <FileText className="w-16 h-16 text-primary-navy mb-4" />
               <p className="text-sm font-bold text-academic-blue">{activePreviewDoc.name}</p>
-              <p className="text-xs text-cool-gray mt-1">
-                Mock File URL: <code className="font-mono text-primary-navy">{activePreviewDoc.url}</code>
-              </p>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full mt-4">
-                Simulated Document Viewer
-              </span>
+              <a
+                href={activePreviewDoc.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary-navy text-white text-xs font-semibold rounded-full mt-4"
+              >
+                Open secure preview
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
           </div>
         </div>

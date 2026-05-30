@@ -41,17 +41,17 @@ export default function AdminPeriodsPage() {
     loadPeriods();
   }, []);
 
-  const loadPeriods = async () => {
+  async function loadPeriods() {
     setIsLoading(true);
     try {
       const data = await periodService.getAll();
       setPeriods(data);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load enrollment periods.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleOpenAdd = () => {
     setModalMode("add");
@@ -100,7 +100,7 @@ export default function AdminPeriodsPage() {
       }
       setModalOpen(false);
       loadPeriods();
-    } catch (err) {
+    } catch {
       toast.error("Failed to save enrollment period.");
     }
   };
@@ -117,7 +117,7 @@ export default function AdminPeriodsPage() {
       await periodService.update(item.id, { status: nextStatus });
       toast.success(`Period academic year ${item.academicYear} marked ${nextStatus}.`);
       loadPeriods();
-    } catch (err) {
+    } catch {
       toast.error("Failed to update status.");
     }
   };
@@ -128,7 +128,7 @@ export default function AdminPeriodsPage() {
         await periodService.delete(id);
         toast.success("Period deleted.");
         loadPeriods();
-      } catch (err) {
+      } catch {
         toast.error("Failed to delete period.");
       }
     }
@@ -272,7 +272,7 @@ export default function AdminPeriodsPage() {
                 <label className="font-bold text-slate-gray mb-1 block">Status</label>
                 <select
                   value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value as any })}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as EnrollmentPeriod["status"] })}
                   className="w-full p-2.5 border border-[#E2E8F0] rounded-bento-sm bg-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-primary-navy"
                 >
                   <option value="inactive">Inactive</option>

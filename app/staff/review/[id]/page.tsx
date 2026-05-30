@@ -7,16 +7,12 @@ import {
   ClipboardList, 
   ArrowLeft, 
   User, 
-  BookOpen, 
   GraduationCap, 
   FolderOpen, 
   MessageSquare, 
   CheckCircle, 
   XCircle, 
   AlertTriangle,
-  FileClock,
-  Clock,
-  CornerDownRight,
   ShieldAlert
 } from "lucide-react";
 
@@ -29,10 +25,12 @@ import { applicationService, documentService } from "@/src/services/application"
 import { reviewService } from "@/src/services/review";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
 import { Application, ApplicationDocument, ReviewNote, Faculty, Department, Major } from "@/src/types";
+import { useAuth } from "@/src/providers/auth-provider";
 
 export default function StaffReviewDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const applicationId = params.id as string;
 
   // Data Loading state
@@ -58,21 +56,15 @@ export default function StaffReviewDetailPage() {
     status: "approved" | "rejected" | "need_correction" | null;
   }>({ open: false, status: null });
 
-  // Reviewer details
-  const [reviewer, setReviewer] = useState<{ id: string; name: string } | null>(null);
+  const reviewer = user ? { id: user.id, name: user.name } : null;
 
   useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (stored) {
-      try {
-        const u = JSON.parse(stored);
-        setReviewer({ id: u.id, name: u.name });
-      } catch (e) {}
-    }
-    loadApplicationData();
+    void loadApplicationData();
+    // Route changes are the only reason to reload the application payload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationId]);
 
-  const loadApplicationData = async () => {
+  async function loadApplicationData() {
     setIsLoading(true);
     try {
       // 1. Fetch application details
@@ -104,12 +96,12 @@ export default function StaffReviewDetailPage() {
         setDepartment(dept);
         setMajor(maj);
       }
-    } catch (e) {
+    } catch {
       toast.error("Failed to load application context.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleReviewTrigger = (status: "approved" | "rejected" | "need_correction") => {
     if (status !== "approved" && !comment.trim()) {
@@ -138,7 +130,7 @@ export default function StaffReviewDetailPage() {
       
       // Reload updated model
       await loadApplicationData();
-    } catch (e) {
+    } catch {
       toast.error("Failed to process review action.");
     } finally {
       setIsSubmitting(false);
@@ -189,7 +181,7 @@ export default function StaffReviewDetailPage() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
                     className={`flex items-center gap-1.5 px-5 py-4 text-xs font-bold border-b-2 transition-all ${
                       active 
                         ? "border-primary-navy text-primary-navy bg-white" 
@@ -425,7 +417,7 @@ export default function StaffReviewDetailPage() {
                             <span className="text-cool-gray">{new Date(note.createdAt).toLocaleString()}</span>
                           </div>
                           <p className="text-xs text-slate-gray leading-relaxed font-medium">
-                            "{note.comment}"
+                            &quot;{note.comment}&quot;
                           </p>
                         </div>
                       ))}
@@ -530,7 +522,7 @@ export default function StaffReviewDetailPage() {
                 <div className="space-y-1">
                   <strong className="block text-academic-blue mt-2">Accompanying Feedback:</strong>
                   <blockquote className="p-2.5 bg-yellow-50/50 border-l-2 border-warning-amber text-slate-gray">
-                    "{comment}"
+                    &quot;{comment}&quot;
                   </blockquote>
                 </div>
               )}

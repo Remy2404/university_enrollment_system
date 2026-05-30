@@ -51,22 +51,21 @@ All phases must strictly adhere to the following specifications defined in the m
   - Section Gap: `24px`
   - Form Field Gap: `16px`
 
-### 4. Mock Database API (json-server)
-A mock database configuration is provided in the root [db.json](file:///d:/university_enrollment_system/db.json) file. This JSON database seeds the system with mock users (students, staff, admin), faculties, majors, active applications with various states (draft, submitted, approved, etc.), documents, notifications, and analytics stats.
+### 4. Supabase Backend
+The application uses Supabase Auth, PostgREST, RPC functions, and the private `application-documents` storage bucket. Browser access is wrapped by the service layer under `src/services/`, and database authorization is enforced with row-level security policies.
 
-To run the mock API server locally:
+Required local environment variables:
 ```bash
-npx json-server --watch db.json --port 3001
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-All application endpoints support full CRUD operations:
-- `/users` - Student, staff, and admin accounts
-- `/faculties` - Academic faculties
-- `/majors` - Fields of study under faculties
-- `/applications` - Enrollment applications containing form progress data
-- `/documents` - Uploaded verification documents checklist
-- `/notifications` - Action notifications triggered by status changes
-- `/systemStats` - Application analytics metrics
+The deployed backend includes:
+- Auth-backed `profiles` and `user_roles`
+- Academic faculties, departments, programs, years, and admission periods
+- Enrollment applications, program choices, document metadata, reviews, and status history
+- Private signed document URLs from the `application-documents` bucket
+- User notifications and persisted portal preferences
 
 ---
 

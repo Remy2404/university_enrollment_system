@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, CheckCircle, Eye, Trash2, Upload, FileText } from "lucide-react";
-import { clsx } from "clsx";
+import { AlertCircle, Eye, Trash2, Upload, FileText } from "lucide-react";
 import { ApplicationDocument } from "@/src/types";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge, type EnrollmentStatus } from "./StatusBadge";
 import { Button } from "./Button";
 
 interface DocumentStatusCardProps {
@@ -19,7 +18,6 @@ interface DocumentStatusCardProps {
 }
 
 export function DocumentStatusCard({
-  documentType,
   documentLabel,
   docRecord,
   uploadProgress,
@@ -32,20 +30,12 @@ export function DocumentStatusCard({
   const status = docRecord ? docRecord.status : "not_uploaded";
 
   // Map database status to Badge status
-  const badgeStatusMap: Record<string, any> = {
+  const badgeStatusMap: Record<string, EnrollmentStatus> = {
     not_uploaded: "draft",
     uploaded: "submitted",
     under_review: "pending_review",
     valid: "approved",
     invalid: "rejected",
-  };
-
-  const statusLabels: Record<string, string> = {
-    not_uploaded: "Not Uploaded",
-    uploaded: "Uploaded",
-    under_review: "Under Review",
-    valid: "Valid",
-    invalid: "Invalid / Rejected",
   };
 
   return (

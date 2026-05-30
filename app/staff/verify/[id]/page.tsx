@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { 
-  CheckSquare, 
   ArrowLeft, 
   Eye, 
   FileText, 
@@ -13,7 +12,6 @@ import {
   HelpCircle, 
   Download,
   AlertTriangle,
-  Info
 } from "lucide-react";
 
 import { BentoCard } from "../../../components/ui/BentoCard";
@@ -45,11 +43,7 @@ export default function StaffDocumentVerifyDetailPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    loadContext();
-  }, [applicationId]);
-
-  const loadContext = async () => {
+  async function loadContext() {
     setIsLoading(true);
     try {
       const app = await applicationService.getById(applicationId);
@@ -66,12 +60,19 @@ export default function StaffDocumentVerifyDetailPage() {
         setActiveDoc(docs[0]);
         setRejectReason(docs[0].rejectReason || "");
       }
-    } catch (e) {
+    } catch {
       toast.error("Failed to load verification documents.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => void loadContext(), 0);
+    return () => window.clearTimeout(timeoutId);
+    // Route changes are the only reason to reload the application payload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationId]);
 
   const handleSelectDoc = (doc: ApplicationDocument) => {
     setActiveDoc(doc);
@@ -97,7 +98,7 @@ export default function StaffDocumentVerifyDetailPage() {
       // Update local list
       setDocuments(prev => prev.map(d => d.id === activeDoc.id ? updated : d));
       setActiveDoc(updated);
-    } catch (e) {
+    } catch {
       toast.error("Failed to update document verification status.");
     } finally {
       setIsUpdating(false);
@@ -172,7 +173,7 @@ export default function StaffDocumentVerifyDetailPage() {
           </div>
         </BentoCard>
 
-        {/* Center Column: Live Document Preview Mock */}
+        {/* Center Column: Secure document preview */}
         <BentoCard className="lg:col-span-2 flex flex-col justify-between p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
@@ -192,7 +193,7 @@ export default function StaffDocumentVerifyDetailPage() {
                 <div className="space-y-1">
                   <h4 className="font-bold text-academic-blue text-sm">{activeDoc.name}</h4>
                   <p className="text-xs text-cool-gray">
-                    Mock File Path: <code className="font-mono bg-slate-200/50 px-1 py-0.5 rounded-md text-[10px]">{activeDoc.url}</code>
+                    Private storage preview link generated for this review session.
                   </p>
                   <p className="text-[10px] text-cool-gray">
                     Uploaded on: {activeDoc.uploadedAt ? new Date(activeDoc.uploadedAt).toLocaleString() : "Unknown"}
@@ -209,13 +210,14 @@ export default function StaffDocumentVerifyDetailPage() {
                     <Eye className="w-3.5 h-3.5" />
                     Open In New Tab
                   </a>
-                  <button 
-                    onClick={() => toast.success("Mock download triggered successfully.")}
+                  <a
+                    href={activeDoc.url}
+                    download={activeDoc.name}
                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-[#E2E8F0] hover:bg-slate-50 text-xs font-semibold text-academic-blue rounded-bento-sm transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Download
-                  </button>
+                  </a>
                 </div>
               </div>
             ) : (
@@ -230,7 +232,7 @@ export default function StaffDocumentVerifyDetailPage() {
             <div className="mt-4 p-3 bg-red-50/50 border border-error-light rounded-bento-sm text-xs text-error-red flex gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-error-red mt-0.5" />
               <div>
-                <strong>Rejection remark:</strong> "{activeDoc.rejectReason}"
+                <strong>Rejection remark:</strong> &quot;{activeDoc.rejectReason}&quot;
               </div>
             </div>
           )}

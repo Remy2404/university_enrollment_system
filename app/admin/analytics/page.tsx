@@ -27,11 +27,7 @@ export default function AdminAnalyticsPage() {
   const [majors, setMajors] = useState<Major[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadAnalyticsContext();
-  }, []);
-
-  const loadAnalyticsContext = async () => {
+  async function loadAnalyticsContext() {
     setIsLoading(true);
     try {
       const [apps, facs, majs] = await Promise.all([
@@ -42,12 +38,17 @@ export default function AdminAnalyticsPage() {
       setApplications(apps);
       setFaculties(facs);
       setMajors(majs);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load analytics context.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => void loadAnalyticsContext(), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   if (isLoading) {
     return <LoadingState rows={5} />;
@@ -58,7 +59,6 @@ export default function AdminAnalyticsPage() {
   const approvedApps = applications.filter(a => a.status === "approved").length;
   const rejectedApps = applications.filter(a => a.status === "rejected").length;
   const pendingApps = applications.filter(a => a.status === "submitted" || a.status === "pending_review").length;
-  const draftApps = applications.filter(a => a.status === "draft").length;
   const needCorrectionApps = applications.filter(a => a.status === "need_correction").length;
 
   const successRate = totalApps > 0 ? Math.round((approvedApps / totalApps) * 100) : 0;

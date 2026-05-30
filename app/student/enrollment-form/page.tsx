@@ -23,6 +23,7 @@ import { LoadingState } from "../../components/ui/States";
 import { applicationService } from "@/src/services/application";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
 import { Faculty, Department, Major, User as UserRecord } from "@/src/types";
+import { useAuth } from "@/src/providers/auth-provider";
 
 const steps = [
   "Personal Info",
@@ -35,6 +36,7 @@ const steps = [
 
 export default function EnrollmentFormPage() {
   const router = useRouter();
+  const { user, loading: isAuthLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +51,6 @@ export default function EnrollmentFormPage() {
   const [filteredMajors, setFilteredMajors] = useState<Major[]>([]);
 
   const [studentId, setStudentId] = useState<string | null>(null);
-  const [studentName, setStudentName] = useState("");
   const [appId, setAppId] = useState<string | null>(null);
   const isSubmitInFlight = useRef(false);
 
@@ -95,7 +96,6 @@ export default function EnrollmentFormPage() {
         phoneNumber: user.phoneNumber,
       });
       setStudentId(user.id);
-      setStudentName(user.name);
       if (app) {
         setAppId(app.id);
         
@@ -162,22 +162,15 @@ export default function EnrollmentFormPage() {
   }, [router]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (!stored) {
+    if (isAuthLoading) return;
+    if (!user) {
       router.push("/login");
       return;
     }
 
-    try {
-      const user = JSON.parse(stored) as UserRecord;
-      const timeoutId = window.setTimeout(() => {
-        void loadFormContext(user);
-      }, 0);
-      return () => window.clearTimeout(timeoutId);
-    } catch {
-      router.push("/login");
-    }
-  }, [loadFormContext, router]);
+    const timeoutId = window.setTimeout(() => void loadFormContext(user), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isAuthLoading, loadFormContext, router, user]);
 
   // Handle cascading dropdowns
   const handleFacultyChange = (fId: string) => {
@@ -352,7 +345,7 @@ export default function EnrollmentFormPage() {
       });
 
       // 2. Submit transaction
-      await applicationService.submit(appId, studentName, studentId);
+      await applicationService.submit(appId);
       
       toast.success("Application submitted successfully!");
       router.push("/student/status");

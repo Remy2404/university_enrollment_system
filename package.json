@@ -5,14 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "mock:api": "json-server mock-api/db.json --port 3001",
-    "dev:all": "concurrently \"npm run dev\" \"npm run mock:api\"",
     "start": "next start",
     "format": "prettier --write .",
     "lint": "eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2",
     "@tanstack/react-query": "^5.100.14",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",

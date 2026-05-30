@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { Bell, Search, GraduationCap } from "lucide-react";
-import { StatusBadge } from "../ui/StatusBadge";
+import { Bell, GraduationCap } from "lucide-react";
 
 interface TopBarProps {
   title?: string;

@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { 
-  LayoutDashboard, 
-  FileText, 
   FolderOpen, 
   Activity, 
   Bell, 
@@ -14,9 +12,6 @@ import {
   ChevronRight, 
   ArrowRight,
   BookOpen,
-  HelpCircle,
-  FileClock,
-  UserCheck
 } from "lucide-react";
 
 import { Button } from "../../components/ui/Button";
@@ -28,11 +23,11 @@ import { applicationService, documentService } from "@/src/services/application"
 import { notificationService } from "@/src/services/notification";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
 import { Application, ApplicationDocument, Notification } from "@/src/types";
+import { useAuth } from "@/src/providers/auth-provider";
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const [userName, setUserName] = useState<string>("Student");
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, loading: isAuthLoading } = useAuth();
   const [appRecord, setAppRecord] = useState<Application | null>(null);
   const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -46,39 +41,37 @@ export default function StudentDashboardPage() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (!stored) {
-      router.push("/login");
-      return;
-    }
-
+  async function loadDashboardData(uid: string) {
     try {
-      const user = JSON.parse(stored);
-      setUserName(user.name || "Student");
-      setUserId(user.id);
-      loadDashboardData(user.id);
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
+      // 1. Get application (Critical)
+      let app = null;
+      try {
+        app = await applicationService.getByStudentId(uid);
+        setAppRecord(app);
+      } catch (err) {
+        console.error("Failed to load application record", err);
+        toast.error("Failed to load application details.");
+      }
 
-  const loadDashboardData = async (uid: string) => {
-    try {
-      // 1. Get application
-      const app = await applicationService.getByStudentId(uid);
-      setAppRecord(app);
-
-      // 2. Fetch notifications
-      const notifs = await notificationService.getByUserId(uid);
-      setNotifications(notifs.slice(0, 3)); // show top 3 recent notifications
+      // 2. Fetch notifications (Non-critical)
+      try {
+        const notifs = await notificationService.getByUserId(uid);
+        setNotifications(notifs.slice(0, 3)); // show top 3 recent notifications
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      }
 
       if (app) {
-        // 3. Get documents
-        const docs = await documentService.getByApplicationId(app.id);
-        setDocuments(docs);
+        // 3. Get documents (Non-critical)
+        try {
+          const docs = await documentService.getByApplicationId(app.id);
+          setDocuments(docs);
+        } catch (err) {
+          console.error("Failed to load documents", err);
+          toast.error("Failed to load document checklist.");
+        }
 
-        // 4. Fetch program names if selected
+        // 4. Fetch program names if selected (Non-critical)
         const { facultyId, departmentId, majorId } = app.programSelection || {};
         if (facultyId && departmentId && majorId) {
           try {
@@ -97,18 +90,30 @@ export default function StudentDashboardPage() {
           }
         }
       }
-    } catch (e) {
+    } catch (err) {
+      console.error("Failed to load dashboard data", err);
       toast.error("Failed to load dashboard data.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => void loadDashboardData(user.id), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isAuthLoading, router, user]);
 
   const handleMarkRead = async (notifId: string) => {
     try {
       await notificationService.markAsRead(notifId);
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
-    } catch (err) {
+    } catch {
       toast.error("Failed to update notification.");
     }
   };
@@ -118,7 +123,7 @@ export default function StudentDashboardPage() {
   }
 
   // Calculate missing documents
-  const requiredTypes = [
+  const requiredTypes: { type: ApplicationDocument["type"]; label: string }[] = [
     { type: "national_id", label: "National ID Card" },
     { type: "high_school_certificate", label: "High School Certificate" },
     { type: "birth_certificate", label: "Birth Certificate" },
@@ -127,7 +132,7 @@ export default function StudentDashboardPage() {
   ];
 
   const uploadedTypes = documents.map(d => d.type);
-  const missingDocs = requiredTypes.filter(r => !uploadedTypes.includes(r.type as any));
+  const missingDocs = requiredTypes.filter(r => !uploadedTypes.includes(r.type));
   const invalidDocs = documents.filter(d => d.status === "invalid");
   const underReviewDocs = documents.filter(d => d.status === "under_review" || d.status === "uploaded");
   const validDocs = documents.filter(d => d.status === "valid");
@@ -200,7 +205,7 @@ export default function StudentDashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-primary-navy/95 to-academic-blue text-white p-6 md:p-8 rounded-bento shadow-md">
         <div className="space-y-1">
           <span className="text-xs font-semibold uppercase tracking-wider text-soft-blue">Student Portal</span>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Welcome back, {userName}!</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Welcome back, {user?.name || "Student"}!</h1>
           <p className="text-sm text-soft-blue/90 max-w-xl leading-relaxed">
             {activeStatus === "draft" && "You're just a few steps away from completing your university application. Make sure to choose your program and upload all documents."}
             {activeStatus === "submitted" && "Your application has been received. Our team will verify your documents shortly."}

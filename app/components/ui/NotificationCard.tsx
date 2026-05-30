@@ -9,18 +9,8 @@ import {
   Info,
   AlertTriangle,
   AlertCircle,
-  Circle,
 } from "lucide-react";
-
-export interface Notification {
-  id: string;
-  userId: string;
-  title: string;
-  message: string;
-  type: "success" | "info" | "warning" | "error";
-  read: boolean;
-  createdAt: string;
-}
+import type { Notification } from "@/src/types";
 
 interface NotificationCardProps {
   notification: Notification;

@@ -22,8 +22,10 @@ import { LoadingState } from "../../components/ui/States";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
 import { Faculty, Department, Major } from "@/src/types";
 
+type ProgramTab = "faculties" | "departments" | "majors";
+
 export default function AdminProgramsPage() {
-  const [activeTab, setActiveTab] = useState<"faculties" | "departments" | "majors">("faculties");
+  const [activeTab, setActiveTab] = useState<ProgramTab>("faculties");
   const [isLoading, setIsLoading] = useState(true);
 
   // Lists state
@@ -37,9 +39,9 @@ export default function AdminProgramsPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Form Fields State
-  const [facultyForm, setFacultyForm] = useState({ name: "", code: "", description: "", status: "active" as const });
-  const [departmentForm, setDepartmentForm] = useState({ facultyId: "", name: "", description: "", status: "active" as const });
-  const [majorForm, setMajorForm] = useState({ departmentId: "", name: "", description: "", status: "active" as const });
+  const [facultyForm, setFacultyForm] = useState({ name: "", code: "", description: "", status: "active" as "active" | "inactive" });
+  const [departmentForm, setDepartmentForm] = useState({ facultyId: "", name: "", description: "", status: "active" as "active" | "inactive" });
+  const [majorForm, setMajorForm] = useState({ departmentId: "", name: "", description: "", status: "active" as "active" | "inactive" });
 
   // Delete Confirm State
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -49,7 +51,7 @@ export default function AdminProgramsPage() {
     loadAllProgramData();
   }, []);
 
-  const loadAllProgramData = async () => {
+  async function loadAllProgramData() {
     setIsLoading(true);
     try {
       const [facs, depts, majs] = await Promise.all([
@@ -60,12 +62,12 @@ export default function AdminProgramsPage() {
       setFaculties(facs);
       setDepartments(depts);
       setMajors(majs);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load academic program data.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleOpenAdd = () => {
     setModalMode("add");
@@ -80,15 +82,18 @@ export default function AdminProgramsPage() {
     setModalOpen(true);
   };
 
-  const handleOpenEdit = (item: any) => {
+  const handleOpenEdit = (item: Faculty | Department | Major) => {
     setModalMode("edit");
     setActiveId(item.id);
     if (activeTab === "faculties") {
-      setFacultyForm({ name: item.name, code: item.code, description: item.description, status: item.status });
+      const faculty = item as Faculty;
+      setFacultyForm({ name: faculty.name, code: faculty.code, description: faculty.description, status: faculty.status });
     } else if (activeTab === "departments") {
-      setDepartmentForm({ facultyId: item.facultyId, name: item.name, description: item.description, status: item.status });
+      const department = item as Department;
+      setDepartmentForm({ facultyId: department.facultyId, name: department.name, description: department.description, status: department.status });
     } else {
-      setMajorForm({ departmentId: item.departmentId, name: item.name, description: item.description, status: item.status });
+      const major = item as Major;
+      setMajorForm({ departmentId: major.departmentId, name: major.name, description: major.description, status: major.status });
     }
     setModalOpen(true);
   };
@@ -135,12 +140,12 @@ export default function AdminProgramsPage() {
       }
       setModalOpen(false);
       loadAllProgramData();
-    } catch (err) {
+    } catch {
       toast.error("Failed to save changes.");
     }
   };
 
-  const handleToggleStatus = async (type: "faculty" | "department" | "major", item: any) => {
+  const handleToggleStatus = async (type: "faculty" | "department" | "major", item: { id: string; status: "active" | "inactive" }) => {
     const nextStatus = item.status === "active" ? "inactive" : "active";
     try {
       if (type === "faculty") {
@@ -154,7 +159,7 @@ export default function AdminProgramsPage() {
         toast.success(`Major marked ${nextStatus}.`);
       }
       loadAllProgramData();
-    } catch (err) {
+    } catch {
       toast.error("Status update failed.");
     }
   };
@@ -180,7 +185,7 @@ export default function AdminProgramsPage() {
       setDeleteConfirmOpen(false);
       setDeleteTarget(null);
       loadAllProgramData();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete resource.");
     }
   };
@@ -210,17 +215,17 @@ export default function AdminProgramsPage() {
 
       {/* Tabs list */}
       <div className="flex border-b border-[#E2E8F0] space-x-2">
-        {[
+        {([
           { id: "faculties", label: "Faculties", icon: Building2 },
           { id: "departments", label: "Departments", icon: Layers },
           { id: "majors", label: "Majors", icon: BookOpen },
-        ].map((tab) => {
+        ] satisfies { id: ProgramTab; label: string; icon: typeof Building2 }[]).map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-5 py-3 text-xs font-bold border-b-2 transition-all ${
                 active 
                   ? "border-primary-navy text-primary-navy bg-white" 

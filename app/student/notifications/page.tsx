@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Bell, Filter, Inbox } from "lucide-react";
+import { Bell, Inbox } from "lucide-react";
 import {
   NotificationCard,
-  type Notification,
 } from "../../components/ui/NotificationCard";
 import { LoadingState, EmptyState } from "../../components/ui/States";
+import { notificationService } from "@/src/services/notification";
+import { useAuth } from "@/src/providers/auth-provider";
+import type { Notification } from "@/src/types";
 
 type FilterTab = "all" | "unread" | "success" | "info" | "warning";
 
@@ -22,46 +24,35 @@ const filterTabs: { key: FilterTab; label: string }[] = [
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const { user, loading: isAuthLoading } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
-  const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("ues_user");
-    if (!storedUser) {
-      router.push("/login");
-      return;
-    }
-
+  async function fetchNotifications(uid: string) {
     try {
-      const user = JSON.parse(storedUser);
-      setUserId(user.id);
-      fetchNotifications(user.id);
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
-
-  const fetchNotifications = async (uid: string) => {
-    try {
-      const res = await fetch(`http://localhost:3001/notifications?userId=${uid}`);
-      const data: Notification[] = await res.json();
-      setNotifications(data);
+      setNotifications(await notificationService.getByUserId(uid));
     } catch {
       toast.error("Failed to load notifications.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => void fetchNotifications(user.id), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isAuthLoading, router, user]);
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      await fetch(`http://localhost:3001/notifications/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ read: true }),
-      });
+      await notificationService.markAsRead(id);
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
@@ -72,17 +63,10 @@ export default function NotificationsPage() {
   };
 
   const handleMarkAllAsRead = async () => {
+    if (!user) return;
     const unread = notifications.filter((n) => !n.read);
     try {
-      await Promise.all(
-        unread.map((n) =>
-          fetch(`http://localhost:3001/notifications/${n.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ read: true }),
-          })
-        )
-      );
+      await notificationService.markAllAsRead(user.id);
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       toast.success(`${unread.length} notifications marked as read.`);
     } catch {

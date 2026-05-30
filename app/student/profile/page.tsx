@@ -22,32 +22,13 @@ import {
 import { Button } from "../../components/ui/Button";
 import { BentoCard } from "../../components/ui/BentoCard";
 import { LoadingState } from "../../components/ui/States";
-
-interface ApplicationRecord {
-  id: string;
-  studentId: string;
-  status: string;
-  progress: number;
-  personalInfo: {
-    fullName: string;
-    gender: string;
-    dateOfBirth: string;
-    nationality: string;
-    nationalId: string;
-    photoUrl: string;
-  };
-  contactInfo: {
-    phone: string;
-    email: string;
-    address: string;
-    city: string;
-  };
-}
+import { profileService } from "@/src/services/profile";
+import { userService } from "@/src/services/user";
+import { useAuth } from "@/src/providers/auth-provider";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [appRecord, setAppRecord] = useState<ApplicationRecord | null>(null);
+  const { user, loading: isAuthLoading, refreshProfile } = useAuth();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,82 +54,42 @@ export default function ProfilePage() {
     city: "",
   });
 
+  async function fetchProfileData(uid: string) {
+    try {
+      const details = await profileService.getByStudentId(uid);
+      setProfile({
+        fullName: user?.name ?? "",
+        gender: details.gender || "Male",
+        dateOfBirth: details.dateOfBirth,
+        nationalId: details.nationalId,
+        nationality: details.nationality || "Cambodian",
+        phone: details.phone || user?.phoneNumber || "",
+        email: user?.email ?? details.email,
+        address: details.address,
+        city: details.city,
+      });
+    } catch {
+      toast.error("Failed to load profile.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (!stored) {
+    if (isAuthLoading) return;
+    if (!user) {
       router.push("/login");
       return;
     }
 
-    try {
-      const user = JSON.parse(stored);
-      setUserId(user.id);
-      fetchProfileData(user.id, user);
-    } catch (e) {
-      localStorage.removeItem("ues_user");
-      router.push("/login");
-    }
-  }, [router]);
-
-  const fetchProfileData = async (uid: string, cachedUser: any) => {
-    try {
-      // 1. Fetch user record
-      const userRes = await fetch(`http://localhost:3001/users/${uid}`);
-      if (!userRes.ok) throw new Error("User record not found");
-      const userObj = await userRes.json();
-
-      // 2. Fetch active application
-      const appRes = await fetch(`http://localhost:3001/applications?studentId=${uid}`);
-      const appData = await appRes.json();
-
-      if (appData.length > 0) {
-        const app = appData[0] as ApplicationRecord;
-        setAppRecord(app);
-        setProfile({
-          fullName: app.personalInfo.fullName || userObj.name || "",
-          gender: app.personalInfo.gender || "Male",
-          dateOfBirth: app.personalInfo.dateOfBirth || "",
-          nationalId: app.personalInfo.nationalId || "",
-          nationality: app.personalInfo.nationality || "Cambodian",
-          phone: app.contactInfo.phone || userObj.phoneNumber || "",
-          email: app.contactInfo.email || userObj.email || "",
-          address: app.contactInfo.address || "",
-          city: app.contactInfo.city || "",
-        });
-      } else {
-        // Fallback to user account fields
-        setProfile({
-          fullName: userObj.name || "",
-          gender: "Male",
-          dateOfBirth: "",
-          nationalId: "",
-          nationality: "Cambodian",
-          phone: userObj.phoneNumber || "",
-          email: userObj.email || "",
-          address: "",
-          city: "",
-        });
-      }
-    } catch (error) {
-      toast.error("Failed to load profile. Using local session fallback.");
-      setProfile({
-        fullName: cachedUser.name || "",
-        gender: "Male",
-        dateOfBirth: "",
-        nationalId: "",
-        nationality: "Cambodian",
-        phone: cachedUser.phoneNumber || "",
-        email: cachedUser.email || "",
-        address: "",
-        city: "",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const timeoutId = window.setTimeout(() => void fetchProfileData(user.id), 0);
+    return () => window.clearTimeout(timeoutId);
+    // The loader is route-context bound and intentionally invoked only on auth changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthLoading, router, user]);
 
   const handleSave = async () => {
-    if (!userId) return;
+    if (!user) return;
 
     // Field validation
     if (profile.fullName.trim().length < 2) {
@@ -163,57 +104,28 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
-      // 1. Update user record in db.json
-      const userUpdateRes = await fetch(`http://localhost:3001/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await Promise.all([
+        userService.update(user.id, {
           name: profile.fullName,
           phoneNumber: profile.phone,
         }),
-      });
-
-      if (!userUpdateRes.ok) throw new Error("Failed to update user record");
-      const updatedUser = await userUpdateRes.json();
-
-      // Update local storage session
-      localStorage.setItem("ues_user", JSON.stringify(updatedUser));
-
-      // 2. Update application record if it exists
-      if (appRecord) {
-        const appUpdateRes = await fetch(`http://localhost:3001/applications/${appRecord.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            personalInfo: {
-              ...appRecord.personalInfo,
-              fullName: profile.fullName,
-              gender: profile.gender,
-              dateOfBirth: profile.dateOfBirth,
-              nationality: profile.nationality,
-              nationalId: profile.nationalId,
-            },
-            contactInfo: {
-              ...appRecord.contactInfo,
-              phone: profile.phone,
-              email: profile.email,
-              address: profile.address,
-              city: profile.city,
-            },
-          }),
-        });
-
-        if (!appUpdateRes.ok) throw new Error("Failed to update application details");
-        const updatedApp = await appUpdateRes.json();
-        setAppRecord(updatedApp);
-      }
+        profileService.update(user.id, {
+          studentId: user.id,
+          gender: profile.gender,
+          dateOfBirth: profile.dateOfBirth,
+          nationalId: profile.nationalId,
+          nationality: profile.nationality,
+          phone: profile.phone,
+          email: profile.email,
+          address: profile.address,
+          city: profile.city,
+        }),
+      ]);
+      await refreshProfile();
 
       toast.success("Profile updated successfully.");
       setIsEditing(false);
-      
-      // Dispatch storage event to notify layout TopBar of the name update
-      window.dispatchEvent(new Event("storage"));
-    } catch (error) {
+    } catch {
       toast.error("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
@@ -237,14 +149,17 @@ export default function ProfilePage() {
     }
 
     setIsSaving(true);
-    // Simulate delay
-    await new Promise((r) => setTimeout(r, 600));
-    
-    toast.success("Password changed successfully.");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setIsSaving(false);
+    try {
+      await userService.changePassword(currentPassword, newPassword);
+      toast.success("Password changed successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update password.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {

@@ -517,6 +517,44 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -648,6 +686,44 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          application_updates: boolean
+          document_alerts: boolean
+          email_notifications: boolean
+          language: string
+          sms_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_updates?: boolean
+          document_alerts?: boolean
+          email_notifications?: boolean
+          language?: string
+          sms_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_updates?: boolean
+          document_alerts?: boolean
+          email_notifications?: boolean
+          language?: string
+          sms_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -657,12 +733,40 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      create_application_draft: {
+        Args: { p_admission_period_id: string }
+        Returns: Database["public"]["Tables"]["applications"]["Row"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      save_application_draft: {
+        Args: {
+          p_academic_background: Json
+          p_application_id: string
+          p_contact_info: Json
+          p_guardian_info: Json
+          p_personal_info: Json
+          p_program_id?: string
+          p_progress_percentage: number
+        }
+        Returns: Database["public"]["Tables"]["applications"]["Row"]
+      }
+      submit_application: {
+        Args: { p_application_id: string }
+        Returns: Database["public"]["Tables"]["applications"]["Row"]
+      }
+      submit_application_review: {
+        Args: {
+          p_application_id: string
+          p_notes?: string
+          p_status: Database["public"]["Enums"]["application_status"]
+        }
+        Returns: Database["public"]["Tables"]["applications"]["Row"]
       }
     }
     Enums: {

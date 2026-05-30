@@ -20,7 +20,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { userService } from "@/src/services/user";
+import { useAuth } from "@/src/providers/auth-provider";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email address"),
@@ -31,6 +31,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -42,23 +43,10 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 800));
-
     try {
-      const users = await userService.getByEmail(data.email);
-
-      if (users.length === 0) {
-        toast.error("No account found with this email address.");
-        return;
-      }
-
-      const user = users[0];
-      // Store mock session
-      localStorage.setItem("ues_user", JSON.stringify(user));
+      const user = await signIn(data.email, data.password);
       toast.success(`Welcome back, ${user.name}!`);
 
-      // Route based on role
       if (user.role === "student") {
         router.push("/student/dashboard");
       } else if (user.role === "staff") {
@@ -66,8 +54,8 @@ export default function LoginPage() {
       } else {
         router.push("/admin/programs");
       }
-    } catch (e) {
-      toast.error("Unable to connect to the server. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to sign in. Please try again.");
     }
   };
 
@@ -140,16 +128,6 @@ export default function LoginPage() {
             <p className="text-sm text-slate-gray mb-6">
               Sign in to your enrollment portal account
             </p>
-
-            {/* Prototype warning banner */}
-            <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-bento-sm">
-              <p className="text-xs font-semibold text-error-red flex items-center gap-1.5">
-                <span>⚠️ Prototype Authentication</span>
-              </p>
-              <p className="text-[11px] text-red-700 mt-1 leading-relaxed">
-                This portal runs as a mock prototype. Password checks are simulated; any registered email will grant access.
-              </p>
-            </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* Email */}
@@ -249,6 +227,8 @@ export default function LoginPage() {
                 Staff: <code className="font-mono text-primary-navy">keo.sarath@staff.edu.kh</code>
                 <br />
                 Admin: <code className="font-mono text-primary-navy">ouk.vichea@admin.edu.kh</code>
+                <br />
+                Password: <code className="font-mono text-primary-navy">Test@12345</code>
               </p>
             </div>
 

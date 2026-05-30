@@ -22,10 +22,9 @@ This task board tracks the progress of the University Enrollment System implemen
   - [x] Implement Requirements Summary list
   - [x] Implement Important Dates timeline preview
   - [x] Implement Footer with academic branding
-- [x] **1.5 Setup & Validate Mock Database**
-  - [x] Configure [db.json](file:///d:/university_enrollment_system/db.json) with comprehensive seed data (users, applications, documents, faculties, majors)
-  - [x] Verify mock server runs via `json-server` and exposes all necessary endpoints
-  - [x] Test mock database CRUD functionality for applications and documents
+- [x] **1.5 Setup Initial Prototype Data (Superseded)**
+  - [x] Build the initial local fixture used during UI prototyping
+  - [x] Retire the fixture after the Supabase integration replaced the prototype API
 
 ---
 
@@ -113,3 +112,21 @@ This task board tracks the progress of the University Enrollment System implemen
   - [x] Add KPI metric cards (Total Registered, Completed rate, Pending, Rejections)
   - [x] Create charts using CSS/SVG (Enrollment by Faculty, Enrollment by Major, trend comparison lines)
   - [x] Create reports generation table list with Export PDF/CSV trigger actions
+
+---
+
+## Phase 7: Supabase Integration
+- [x] **7.1 Add Supabase Client Infrastructure**
+  - [x] Add browser, server, and proxy session clients
+  - [x] Add the authenticated user provider and role-aware portal shell
+- [x] **7.2 Replace Prototype Data Access**
+  - [x] Replace browser storage sessions with Supabase Auth
+  - [x] Replace JSON Server calls with typed service-layer queries and RPC calls
+  - [x] Connect private document uploads and signed preview URLs
+- [x] **7.3 Add Local Database Migration**
+  - [x] Add notifications, preferences, hardened application RPCs, RLS policies, and grants
+- [ ] **7.4 Complete Remote Deployment**
+  - [ ] Restore Supabase MCP authentication
+  - [x] Apply the checked-in migration and regenerate TypeScript database types
+  - [ ] Write the project URL and publishable key to `.env.local`
+  - [ ] Run authenticated browser workflow verification

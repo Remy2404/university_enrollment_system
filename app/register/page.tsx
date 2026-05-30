@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod/v4";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { userService } from "@/src/services/user";
+import { useAuth } from "@/src/providers/auth-provider";
 
 const registerSchema = z
   .object({
@@ -38,19 +38,20 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
 
-  const passwordValue = watch("password", "");
+  const passwordValue = useWatch({ control, name: "password", defaultValue: "" });
 
   const passwordChecks = [
     { label: "At least 8 characters", met: passwordValue.length >= 8 },
@@ -62,28 +63,18 @@ export default function RegisterPage() {
   ];
 
   const onSubmit = async (data: RegisterForm) => {
-    await new Promise((r) => setTimeout(r, 800));
-
     try {
-      // Check if email already exists
-      const existing = await userService.getByEmail(data.email);
-
-      if (existing.length > 0) {
-        toast.error("An account with this email already exists.");
-        return;
-      }
-
-      // Register student orchestrator
-      await userService.registerStudent({
+      await signUp({
         fullName: data.fullName,
         email: data.email,
         phoneNumber: data.phoneNumber,
+        password: data.password,
       });
 
-      toast.success("Account created successfully! Please log in.");
+      toast.success("Account created. Sign in after confirming your email if confirmation is enabled.");
       router.push("/login");
-    } catch (e) {
-      toast.error("Unable to connect to the server. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to create your account. Please try again.");
     }
   };
 

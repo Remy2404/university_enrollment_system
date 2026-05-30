@@ -12,8 +12,6 @@ import {
   FileText,
   ShieldCheck,
   ChevronRight,
-  BookOpen,
-  HelpCircle,
   Phone,
   Mail,
   MapPin
@@ -243,7 +241,7 @@ export default function LandingPage() {
               Check Required Admission Documents
             </h2>
             <p className="text-slate-gray leading-relaxed mb-8">
-              Ensure you have scanned digital copies of these credentials ready before starting the enrollment stepper form. Original files will be verified by the registrar's office.
+              Ensure you have scanned digital copies of these credentials ready before starting the enrollment stepper form. Original files will be verified by the registrar&apos;s office.
             </p>
             <Button
               variant="secondary"

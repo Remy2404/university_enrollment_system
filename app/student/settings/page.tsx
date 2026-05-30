@@ -14,10 +14,12 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { BentoCard } from "../../components/ui/BentoCard";
+import { settingsService } from "@/src/services/settings";
+import { useAuth } from "@/src/providers/auth-provider";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, loading: isAuthLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
   const [preferences, setPreferences] = useState({
@@ -30,42 +32,33 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("en");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("ues_user");
-    if (!storedUser) {
+    if (isAuthLoading) return;
+    if (!user) {
       router.push("/login");
       return;
     }
 
-    try {
-      const user = JSON.parse(storedUser);
-      setUserId(user.id);
-      
-      // Load saved preferences
-      const savedSettings = localStorage.getItem(`ues_settings_${user.id}`);
-      if (savedSettings) {
-        const { preferences: savedPrefs, language: savedLang } = JSON.parse(savedSettings);
-        if (savedPrefs) setPreferences(savedPrefs);
-        if (savedLang) setLanguage(savedLang);
-      }
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
+    void settingsService
+      .getByUserId(user.id)
+      .then(({ language: savedLanguage, ...savedPreferences }) => {
+        setPreferences(savedPreferences);
+        setLanguage(savedLanguage);
+      })
+      .catch(() => toast.error("Failed to load settings."));
+  }, [isAuthLoading, router, user]);
 
   const handleSave = async () => {
-    if (!userId) return;
+    if (!user) return;
 
     setIsSaving(true);
-    // Simulate a brief delay for realistic action feedback
-    await new Promise((r) => setTimeout(r, 400));
 
     try {
-      localStorage.setItem(
-        `ues_settings_${userId}`,
-        JSON.stringify({ preferences, language })
-      );
+      await settingsService.save(user.id, {
+        ...preferences,
+        language: language === "km" ? "km" : "en",
+      });
       toast.success("Settings saved successfully.");
-    } catch (error) {
+    } catch {
       toast.error("Failed to save settings. Please try again.");
     } finally {
       setIsSaving(false);

@@ -12,29 +12,26 @@ import { LoadingState, EmptyState } from "../../components/ui/States";
 import { applicationService } from "@/src/services/application";
 import { reviewService } from "@/src/services/review";
 import { Application, ApplicationTimelineEvent } from "@/src/types";
+import { useAuth } from "@/src/providers/auth-provider";
 
 export default function StudentStatusPage() {
   const router = useRouter();
+  const { user, loading: isAuthLoading } = useAuth();
   const [appRecord, setAppRecord] = useState<Application | null>(null);
   const [events, setEvents] = useState<ApplicationTimelineEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (!stored) {
+    if (isAuthLoading) return;
+    if (!user) {
       router.push("/login");
       return;
     }
 
-    try {
-      const user = JSON.parse(stored);
-      loadStatusDetails(user.id);
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
+    void loadStatusDetails(user.id);
+  }, [isAuthLoading, router, user]);
 
-  const loadStatusDetails = async (uid: string) => {
+  async function loadStatusDetails(uid: string) {
     try {
       const app = await applicationService.getByStudentId(uid);
       if (app) {
@@ -42,12 +39,12 @@ export default function StudentStatusPage() {
         const evts = await reviewService.getEventsByApplicationId(app.id);
         setEvents(evts);
       }
-    } catch (e) {
+    } catch {
       toast.error("Failed to load application status.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   if (isLoading) {
     return <LoadingState rows={6} />;
@@ -235,7 +232,7 @@ export default function StudentStatusPage() {
                 Admission Note
               </h4>
               <p className="text-xs text-slate-gray leading-relaxed bg-white/70 p-3 rounded-bento-sm border border-[#E2E8F0]">
-                "{appRecord.reviewerComments}"
+                &quot;{appRecord.reviewerComments}&quot;
               </p>
               {appRecord.status === "need_correction" && (
                 <p className="text-[11px] text-cool-gray">

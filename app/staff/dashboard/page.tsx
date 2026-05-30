@@ -11,7 +11,6 @@ import {
   AlertTriangle, 
   Users, 
   ArrowRight,
-  BookOpen
 } from "lucide-react";
 
 import { BentoCard } from "../../components/ui/BentoCard";
@@ -30,11 +29,7 @@ export default function StaffDashboardPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboardStats();
-  }, []);
-
-  const loadDashboardStats = async () => {
+  async function loadDashboardStats() {
     try {
       const [apps, docs, facs] = await Promise.all([
         applicationService.getAll(),
@@ -44,12 +39,17 @@ export default function StaffDashboardPage() {
       setApplications(apps);
       setDocuments(docs);
       setFaculties(facs);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load staff stats.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => void loadDashboardStats(), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   if (isLoading) {
     return <LoadingState rows={5} />;

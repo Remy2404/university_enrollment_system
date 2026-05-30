@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertTriangle, AlertCircle, Inbox, RefreshCw } from "lucide-react";
+import { AlertCircle, Inbox, RefreshCw } from "lucide-react";
 import { Button } from "./Button";
 
 // Skeleton Loader

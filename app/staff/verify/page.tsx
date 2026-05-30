@@ -18,11 +18,7 @@ export default function StaffVerificationQueuePage() {
   const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadQueue();
-  }, []);
-
-  const loadQueue = async () => {
+  async function loadQueue() {
     try {
       const [apps, docs] = await Promise.all([
         applicationService.getAll(),
@@ -32,12 +28,17 @@ export default function StaffVerificationQueuePage() {
       const activeApps = apps.filter(a => a.status !== "draft");
       setApplications(activeApps);
       setDocuments(docs);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load verification queue.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => void loadQueue(), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   if (isLoading) {
     return <LoadingState rows={4} />;

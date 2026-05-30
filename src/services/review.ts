@@ -1,50 +1,87 @@
-import { apiClient, ApiQueryOptions } from "../lib/api-client";
-import { ReviewNote, ApplicationTimelineEvent, Application } from "../types";
+import { createClient } from "@/src/lib/supabase/client";
+import type { Enums, Tables } from "@/src/types/database";
+import type { ApplicationTimelineEvent, ReviewNote } from "@/src/types";
+import { applicationService } from "./application";
+import { throwIfError } from "./supabase-helpers";
+
+type ApplicationStatus = Enums<"application_status">;
+
+function toReviewStatus(status: "approved" | "rejected" | "need_correction"): ApplicationStatus {
+  if (status === "approved") return "accepted";
+  if (status === "need_correction") return "documents_required";
+  return status;
+}
+
+function statusTitle(status: ApplicationStatus) {
+  const titles: Record<ApplicationStatus, string> = {
+    draft: "Application Created",
+    submitted: "Application Submitted",
+    under_review: "Application Under Review",
+    documents_required: "Document Corrections Required",
+    accepted: "Application Accepted",
+    rejected: "Application Rejected",
+    enrolled: "Enrollment Completed",
+    withdrawn: "Application Withdrawn",
+  };
+  return titles[status];
+}
+
+function statusDescription(status: ApplicationStatus, reason: string | null) {
+  return reason || statusTitle(status);
+}
+
+interface ReviewWithProfile extends Tables<"application_reviews"> {
+  profiles: { full_name: string } | null;
+}
+
+interface HistoryWithProfile extends Tables<"application_status_history"> {
+  profiles: { full_name: string } | null;
+}
 
 export const reviewService = {
-  // Review Notes CRUD
-  getNotes: (options?: ApiQueryOptions) => {
-    return apiClient.get<ReviewNote[]>("/reviewNotes", options);
-  },
-  getNotesByApplicationId: (applicationId: string) => {
-    return apiClient.get<ReviewNote[]>("/reviewNotes", {
-      filters: { applicationId },
-      sort: "-createdAt",
+  getNotesByApplicationId: async (applicationId: string): Promise<ReviewNote[]> => {
+    const { data, error } = await createClient()
+      .from("application_reviews")
+      .select("*, profiles!application_reviews_reviewer_id_fkey(full_name)")
+      .eq("application_id", applicationId)
+      .order("reviewed_at", { ascending: false });
+    throwIfError(error, "Failed to load review notes");
+
+    return (data ?? []).map((row) => {
+      const review = row as ReviewWithProfile;
+      return {
+        id: review.id,
+        applicationId: review.application_id,
+        reviewerId: review.reviewer_id,
+        reviewerName: review.profiles?.full_name ?? "Admission Staff",
+        comment: review.notes ?? "",
+        createdAt: review.reviewed_at,
+      };
     });
   },
-  createNote: (note: Omit<ReviewNote, "id">) => {
-    const data = { ...note, id: `note-${Date.now()}` };
-    return apiClient.post<ReviewNote>("/reviewNotes", data);
-  },
-  updateNote: (id: string, updates: Partial<ReviewNote>) => {
-    return apiClient.patch<ReviewNote>(`/reviewNotes/${id}`, updates);
-  },
-  deleteNote: (id: string) => {
-    return apiClient.delete<void>(`/reviewNotes/${id}`);
-  },
 
-  // Timeline Events CRUD
-  getEvents: (options?: ApiQueryOptions) => {
-    return apiClient.get<ApplicationTimelineEvent[]>("/timelineEvents", options);
-  },
-  getEventsByApplicationId: (applicationId: string) => {
-    return apiClient.get<ApplicationTimelineEvent[]>("/timelineEvents", {
-      filters: { applicationId },
-      sort: "createdAt",
+  getEventsByApplicationId: async (applicationId: string): Promise<ApplicationTimelineEvent[]> => {
+    const { data, error } = await createClient()
+      .from("application_status_history")
+      .select("*, profiles!application_status_history_changed_by_fkey(full_name)")
+      .eq("application_id", applicationId)
+      .order("changed_at", { ascending: true });
+    throwIfError(error, "Failed to load application timeline");
+
+    return (data ?? []).map((row) => {
+      const history = row as HistoryWithProfile;
+      return {
+        id: history.id,
+        applicationId: history.application_id,
+        status: history.to_status,
+        title: statusTitle(history.to_status),
+        description: statusDescription(history.to_status, history.change_reason),
+        actorName: history.profiles?.full_name ?? "System",
+        createdAt: history.changed_at,
+      };
     });
   },
-  createEvent: (event: Omit<ApplicationTimelineEvent, "id">) => {
-    const data = { ...event, id: `evt-${Date.now()}` };
-    return apiClient.post<ApplicationTimelineEvent>("/timelineEvents", data);
-  },
-  updateEvent: (id: string, updates: Partial<ApplicationTimelineEvent>) => {
-    return apiClient.patch<ApplicationTimelineEvent>(`/timelineEvents/${id}`, updates);
-  },
-  deleteEvent: (id: string) => {
-    return apiClient.delete<void>(`/timelineEvents/${id}`);
-  },
 
-  // Transactional Staff Review Action (Approve, Reject, Request Correction)
   submitReview: async (data: {
     applicationId: string;
     studentId: string;
@@ -53,55 +90,12 @@ export const reviewService = {
     status: "approved" | "rejected" | "need_correction";
     comment: string;
   }) => {
-    const statusMap = {
-      approved: "Approved",
-      rejected: "Rejected",
-      need_correction: "Correction Required",
-    };
-
-    const statusTitle = statusMap[data.status];
-
-    // 1. Update Application status and reviewer comment
-    const app = await apiClient.patch<Application>(`/applications/${data.applicationId}`, {
-      status: data.status,
-      reviewerComments: data.comment,
-      updatedAt: new Date().toISOString(),
+    const { error } = await createClient().rpc("submit_application_review", {
+      p_application_id: data.applicationId,
+      p_status: toReviewStatus(data.status),
+      p_notes: data.comment,
     });
-
-    // 2. Create Review Note
-    if (data.comment.trim()) {
-      await apiClient.post("/reviewNotes", {
-        id: `note-${Date.now()}`,
-        applicationId: data.applicationId,
-        reviewerId: data.reviewerId,
-        reviewerName: data.reviewerName,
-        comment: data.comment,
-        createdAt: new Date().toISOString(),
-      });
-    }
-
-    // 3. Create Timeline Event
-    await apiClient.post("/timelineEvents", {
-      id: `evt-${Date.now()}`,
-      applicationId: data.applicationId,
-      status: data.status,
-      title: statusTitle,
-      description: data.comment || `Application marked as ${statusTitle}`,
-      actorName: data.reviewerName,
-      createdAt: new Date().toISOString(),
-    });
-
-    // 4. Create Student Notification
-    await apiClient.post("/notifications", {
-      id: `notif-${Date.now()}`,
-      userId: data.studentId,
-      title: statusTitle,
-      message: data.comment || `Your application status has been updated to ${statusTitle}.`,
-      type: data.status === "approved" ? "success" : data.status === "rejected" ? "error" : "warning",
-      read: false,
-      createdAt: new Date().toISOString(),
-    });
-
-    return app;
+    throwIfError(error, "Failed to submit application review");
+    return applicationService.getById(data.applicationId);
   },
 };

@@ -22,7 +22,7 @@ import { LoadingState } from "../../components/ui/States";
 import { applicationService } from "@/src/services/application";
 import { facultyService } from "@/src/services/program";
 import { Application, Faculty } from "@/src/types";
-import { PaginatedResponse } from "@/src/lib/api-client";
+import type { QueryFilter } from "@/src/lib/api-client";
 
 export default function StaffApplicationsPage() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function StaffApplicationsPage() {
       try {
         const facs = await facultyService.getAll();
         setFaculties(facs);
-      } catch (e) {
+      } catch {
         toast.error("Failed to load program faculties.");
       }
     };
@@ -58,13 +58,15 @@ export default function StaffApplicationsPage() {
   // Fetch applications on query changes
   useEffect(() => {
     fetchApplicationsList();
+    // Search text is intentionally applied only by form submission.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, selectedFaculty, selectedStatus]);
 
-  const fetchApplicationsList = async () => {
+  async function fetchApplicationsList() {
     setIsLoading(true);
     try {
       // Build filter payload
-      const filters: Record<string, any> = {};
+      const filters: Record<string, unknown | QueryFilter> = {};
       
       if (selectedFaculty) {
         filters["programSelection.facultyId"] = selectedFaculty;
@@ -76,31 +78,22 @@ export default function StaffApplicationsPage() {
         filters["personalInfo.fullName"] = { operator: "contains", value: search.trim() };
       }
 
-      // JSON Server v1 pagination response shape
       const response = await applicationService.getAll({
         page: currentPage,
         limit,
         filters,
         sort: "-updatedAt"
-      }) as any as PaginatedResponse<Application>;
+      });
 
-      // Handle both paginated and non-paginated fallbacks
-      if (response && response.data) {
-        setApplications(response.data);
-        setTotalPages(response.pages || 1);
-        setTotalItems(response.items || response.data.length);
-      } else if (Array.isArray(response)) {
-        // Fallback for non-paginated API returns
-        setApplications(response);
-        setTotalPages(1);
-        setTotalItems(response.length);
-      }
-    } catch (e) {
+      setApplications(response.data);
+      setTotalPages(response.pages || 1);
+      setTotalItems(response.items || response.data.length);
+    } catch {
       toast.error("Failed to load applications list.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

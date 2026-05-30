@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { UploadCloud, File, AlertCircle } from "lucide-react";
+import { useDropzone, type FileRejection } from "react-dropzone";
+import { UploadCloud } from "lucide-react";
 import { clsx } from "clsx";
 
 interface FileUploadDropzoneProps {
@@ -16,14 +16,14 @@ interface FileUploadDropzoneProps {
 export function FileUploadDropzone({
   onFileSelect,
   acceptedFormats = ["application/pdf", "image/jpeg", "image/png"],
-  maxSizeMb = 5,
+  maxSizeMb = 10,
   className,
   disabled = false,
 }: FileUploadDropzoneProps) {
   const maxSize = maxSizeMb * 1024 * 1024;
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], fileRejections: any[]) => {
+    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       if (fileRejections.length > 0) {
         const rejection = fileRejections[0];
         if (rejection.errors[0]?.code === "file-too-large") {

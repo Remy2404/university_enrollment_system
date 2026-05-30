@@ -13,7 +13,6 @@ import {
   Activity,
   Bell,
   User,
-  HelpCircle,
   LogOut,
   GraduationCap,
   Calendar,
@@ -23,6 +22,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useAuth } from "@/src/providers/auth-provider";
 
 interface AppSidebarProps {
   role?: "student" | "staff" | "admin";
@@ -30,6 +30,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ role = "student" }: AppSidebarProps) {
   const pathname = usePathname();
+  const { signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const studentNav = [
@@ -132,14 +133,17 @@ export function AppSidebar({ role = "student" }: AppSidebarProps) {
 
         {/* Footer Logout */}
         <div className="border-t border-[#E2E8F0] p-4">
-          <Link
-            href="/"
-            onClick={() => setIsOpen(false)}
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              void signOut();
+            }}
             className="flex items-center gap-3 px-4 h-11 rounded-bento-sm text-sm font-medium text-error-red hover:bg-red-50 transition-colors"
           >
             <LogOut className="w-5 h-5 text-error-red" />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
     </>
