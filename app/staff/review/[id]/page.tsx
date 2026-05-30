@@ -22,6 +22,7 @@ import { StatusBadge, EnrollmentStatus } from "../../../components/ui/StatusBadg
 import { LoadingState } from "../../../components/ui/States";
 
 import { applicationService, documentService } from "@/src/services/application";
+import { formatDocumentLabels, getDocumentReadiness } from "@/src/services/application-document-requirements";
 import { reviewService } from "@/src/services/review";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
 import { Application, ApplicationDocument, ReviewNote, Faculty, Department, Major } from "@/src/types";
@@ -56,7 +57,12 @@ export default function StaffReviewDetailPage() {
     status: "approved" | "rejected" | "need_correction" | null;
   }>({ open: false, status: null });
 
-  const reviewer = user ? { id: user.id, name: user.name } : null;
+  const documentReadiness = getDocumentReadiness(documents);
+  const approvalBlockers = [
+    ...documentReadiness.missing,
+    ...documentReadiness.invalid,
+    ...documentReadiness.pending,
+  ];
 
   useEffect(() => {
     void loadApplicationData();
@@ -104,6 +110,12 @@ export default function StaffReviewDetailPage() {
   }
 
   const handleReviewTrigger = (status: "approved" | "rejected" | "need_correction") => {
+    if (status === "approved" && !documentReadiness.allVerified) {
+      setActiveTab("documents");
+      toast.error(`Approval blocked. Complete verification for: ${formatDocumentLabels(approvalBlockers)}.`);
+      return;
+    }
+
     if (status !== "approved" && !comment.trim()) {
       toast.error("Please provide review notes/comment before completing action.");
       return;
@@ -112,14 +124,11 @@ export default function StaffReviewDetailPage() {
   };
 
   const handleReviewConfirm = async () => {
-    if (!confirmState.status || !appRecord || !reviewer) return;
+    if (!confirmState.status || !appRecord || !user) return;
     setIsSubmitting(true);
     try {
       await reviewService.submitReview({
         applicationId: appRecord.id,
-        studentId: appRecord.studentId,
-        reviewerId: reviewer.id,
-        reviewerName: reviewer.name,
         status: confirmState.status,
         comment,
       });
@@ -130,8 +139,8 @@ export default function StaffReviewDetailPage() {
       
       // Reload updated model
       await loadApplicationData();
-    } catch {
-      toast.error("Failed to process review action.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to process review action.");
     } finally {
       setIsSubmitting(false);
     }
@@ -439,12 +448,13 @@ export default function StaffReviewDetailPage() {
 
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-slate-gray block">
-                Review Comments & Feedback Remarks
+                Staff Feedback for Student Notification
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Enter feedback for student notifications or logs..."
+                maxLength={1000}
+                placeholder="Explain what the student must correct. This note appears in their portal notification and status view."
                 rows={4}
                 className="w-full text-xs p-3 border border-[#E2E8F0] rounded-bento-sm focus:outline-none focus:ring-1 focus:ring-primary-navy bg-slate-50/50"
               />
@@ -455,7 +465,8 @@ export default function StaffReviewDetailPage() {
                 variant="primary" 
                 className="w-full justify-center bg-success-green hover:bg-success-green/90 border-none font-bold"
                 onClick={() => handleReviewTrigger("approved")}
-                disabled={appRecord.status === "approved"}
+                disabled={appRecord.status === "approved" || !documentReadiness.allVerified}
+                title={documentReadiness.allVerified ? "Approve and admit applicant" : "Verify all required documents before approval"}
               >
                 <CheckCircle className="w-4 h-4 mr-1.5" />
                 Approve & Admit
@@ -489,8 +500,13 @@ export default function StaffReviewDetailPage() {
               Officer Notes
             </h4>
             <p className="text-[11px] text-slate-gray leading-normal">
-              Before approving, verify that all 5 checklist files display <strong>Valid</strong> status badges. Rejected actions will lock further amendments.
+              Before approving, verify that all {documentReadiness.requiredCount} checklist files display <strong>Valid</strong> status badges. Currently verified: <strong>{documentReadiness.verified.length}/{documentReadiness.requiredCount}</strong>.
             </p>
+            {!documentReadiness.allVerified && (
+              <p className="text-[11px] font-semibold leading-normal text-warning-amber">
+                Approval blocked: {formatDocumentLabels(approvalBlockers)} still require attention.
+              </p>
+            )}
           </BentoCard>
         </div>
 

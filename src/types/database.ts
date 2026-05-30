@@ -756,6 +756,14 @@ export type Database = {
         }
         Returns: Database["public"]["Tables"]["applications"]["Row"]
       }
+      review_application_document: {
+        Args: {
+          p_document_id: string
+          p_reject_reason?: string
+          p_status: Database["public"]["Enums"]["document_status"]
+        }
+        Returns: Database["public"]["Tables"]["application_documents"]["Row"]
+      }
       submit_application: {
         Args: { p_application_id: string }
         Returns: Database["public"]["Tables"]["applications"]["Row"]

@@ -93,13 +93,19 @@ export default function StaffDocumentVerifyDetailPage() {
         rejectReason: status === "invalid" ? rejectReason : "",
       });
 
-      toast.success(`${documentTypeLabels[activeDoc.type]} updated to ${status}.`);
-      
-      // Update local list
+      toast.success(
+        status === "invalid"
+          ? `${documentTypeLabels[activeDoc.type]} needs correction. The student was notified and editing is unlocked.`
+          : `${documentTypeLabels[activeDoc.type]} updated to valid.`
+      );
+
       setDocuments(prev => prev.map(d => d.id === activeDoc.id ? updated : d));
       setActiveDoc(updated);
-    } catch {
-      toast.error("Failed to update document verification status.");
+      if (status === "invalid") {
+        setAppRecord(await applicationService.getById(applicationId));
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update document verification status.");
     } finally {
       setIsUpdating(false);
     }
@@ -261,6 +267,7 @@ export default function StaffDocumentVerifyDetailPage() {
                   <textarea
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
+                    maxLength={1000}
                     placeholder="Provide detailed feedback e.g., 'National ID expiration date illegible'..."
                     rows={4}
                     className="w-full text-xs p-2 border border-[#E2E8F0] rounded-bento-sm focus:outline-none focus:ring-1 focus:ring-primary-navy bg-slate-50/50"

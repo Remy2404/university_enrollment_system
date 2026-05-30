@@ -62,7 +62,7 @@ This task board tracks the progress of the University Enrollment System implemen
   - [x] Display document status badges with corresponding status colors
   - [x] Implement file upload simulated progress bar
   - [x] Add Preview, Replace, and Delete actions
-  - [x] Add validation to restrict file type (PDF, JPG, PNG) and file size (<5MB)
+- [x] Add validation to restrict file type (PDF, JPG, PNG) and file size (<10MB)
 
 ---
 

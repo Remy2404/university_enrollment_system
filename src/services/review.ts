@@ -84,9 +84,6 @@ export const reviewService = {
 
   submitReview: async (data: {
     applicationId: string;
-    studentId: string;
-    reviewerId: string;
-    reviewerName: string;
     status: "approved" | "rejected" | "need_correction";
     comment: string;
   }) => {

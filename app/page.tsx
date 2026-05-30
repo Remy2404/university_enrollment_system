@@ -266,7 +266,7 @@ export default function LandingPage() {
                   <p className="text-xs text-slate-gray">{req.desc}</p>
                   {showRequirements && (
                     <p className="text-[11px] text-primary-navy mt-1.5 font-semibold bg-soft-blue/40 px-2 py-0.5 rounded inline-block">
-                      Constraints: File size &lt; 5MB. Formats: PDF, JPG, PNG only.
+                  Constraints: File size &lt; 10MB. Formats: PDF, JPG, PNG only.
                     </p>
                   )}
                 </div>

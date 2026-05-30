@@ -1,75 +1,95 @@
 begin;
 
 create table if not exists public.notifications (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  title text not null check (char_length(title) between 1 and 160),
-  message text not null check (char_length(message) between 1 and 1000),
-  type text not null default 'info' check (type in ('success', 'info', 'warning', 'error')),
-  is_read boolean not null default false,
-  created_at timestamptz not null default now()
+    id uuid primary key default gen_random_uuid (),
+    user_id uuid not null references public.profiles (id) on delete cascade,
+    title text not null check (
+        char_length(title) between 1 and 160
+    ),
+    message text not null check (
+        char_length(message) between 1 and 1000
+    ),
+    type text not null default 'info' check (
+        type in (
+            'success',
+            'info',
+            'warning',
+            'error'
+        )
+    ),
+    is_read boolean not null default false,
+    created_at timestamptz not null default now()
 );
 
-create index if not exists notifications_user_created_at_idx
-  on public.notifications (user_id, created_at desc);
+create index if not exists notifications_user_created_at_idx on public.notifications (user_id, created_at desc);
 
 alter table public.notifications enable row level security;
 
 drop policy if exists "notifications_select_own" on public.notifications;
-create policy "notifications_select_own"
-  on public.notifications for select
-  using (auth.uid() = user_id);
+
+create policy "notifications_select_own" on public.notifications for
+select using (auth.uid () = user_id);
 
 drop policy if exists "notifications_insert_own_or_staff" on public.notifications;
-create policy "notifications_insert_own_or_staff"
-  on public.notifications for insert
-  with check (
-    public.auth_has_role('admission_officer')
-    or public.auth_has_role('registrar')
-    or public.auth_has_role('admin')
-  );
+
+create policy "notifications_insert_own_or_staff" on public.notifications for insert
+with
+    check (
+        public.auth_has_role ('admission_officer')
+        or public.auth_has_role ('registrar')
+        or public.auth_has_role ('admin')
+    );
 
 drop policy if exists "notifications_update_own" on public.notifications;
-create policy "notifications_update_own"
-  on public.notifications for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+
+create policy "notifications_update_own" on public.notifications
+for update
+    using (auth.uid () = user_id)
+with
+    check (auth.uid () = user_id);
 
 drop policy if exists "notifications_delete_own" on public.notifications;
-create policy "notifications_delete_own"
-  on public.notifications for delete
-  using (auth.uid() = user_id);
+
+create policy "notifications_delete_own" on public.notifications for delete using (auth.uid () = user_id);
 
 create table if not exists public.user_preferences (
-  user_id uuid primary key references public.profiles(id) on delete cascade,
-  email_notifications boolean not null default true,
-  sms_notifications boolean not null default false,
-  application_updates boolean not null default true,
-  document_alerts boolean not null default true,
-  language text not null default 'en' check (language in ('en', 'km')),
-  updated_at timestamptz not null default now()
+    user_id uuid primary key references public.profiles (id) on delete cascade,
+    email_notifications boolean not null default true,
+    sms_notifications boolean not null default false,
+    application_updates boolean not null default true,
+    document_alerts boolean not null default true,
+    language text not null default 'en' check (language in ('en', 'km')),
+    updated_at timestamptz not null default now()
 );
 
 alter table public.user_preferences enable row level security;
 
-grant select, insert, update, delete on table public.notifications to authenticated;
-grant select, insert, update on table public.user_preferences to authenticated;
+grant
+select, insert,
+update, delete on table public.notifications to authenticated;
+
+grant
+select, insert,
+update on table public.user_preferences to authenticated;
 
 drop policy if exists "user_preferences_select_own" on public.user_preferences;
-create policy "user_preferences_select_own"
-  on public.user_preferences for select
-  using (auth.uid() = user_id);
+
+create policy "user_preferences_select_own" on public.user_preferences for
+select using (auth.uid () = user_id);
 
 drop policy if exists "user_preferences_insert_own" on public.user_preferences;
-create policy "user_preferences_insert_own"
-  on public.user_preferences for insert
-  with check (auth.uid() = user_id);
+
+create policy "user_preferences_insert_own" on public.user_preferences for insert
+with
+    check (auth.uid () = user_id);
 
 drop policy if exists "user_preferences_update_own" on public.user_preferences;
-create policy "user_preferences_update_own"
-  on public.user_preferences for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+
+create policy "user_preferences_update_own" on public.user_preferences
+for update
+    using (auth.uid () = user_id)
+with
+    check (auth.uid () = user_id);
 
 create or replace function public.notify_application_status_change()
 returns trigger
@@ -96,9 +116,7 @@ begin
       notification_message := 'Admission staff are reviewing your application.';
       notification_type := 'info';
     when 'documents_required' then
-      notification_title := 'Document Corrections Required';
-      notification_message := 'Admission staff requested corrections to your application documents.';
-      notification_type := 'warning';
+      return new;
     when 'accepted' then
       notification_title := 'Application Accepted';
       notification_message := 'Congratulations. Your admission application has been accepted.';
@@ -123,9 +141,220 @@ end;
 $$;
 
 drop trigger if exists applications_notify_status_change on public.applications;
+
 create trigger applications_notify_status_change
   after update of status on public.applications
   for each row execute function public.notify_application_status_change();
+
+grant
+select, insert,
+update, delete on table public.application_documents to authenticated;
+
+drop policy if exists "application_documents_student_select_own" on public.application_documents;
+
+create policy "application_documents_student_select_own" on public.application_documents for
+select using (auth.uid () = applicant_id);
+
+drop policy if exists "application_documents_staff_select" on public.application_documents;
+
+create policy "application_documents_staff_select" on public.application_documents for
+select using (
+        public.auth_has_role ('admission_officer')
+        or public.auth_has_role ('registrar')
+        or public.auth_has_role ('admin')
+    );
+
+drop policy if exists "application_documents_student_insert_editable" on public.application_documents;
+
+create policy "application_documents_student_insert_editable" on public.application_documents for insert
+with
+    check (
+        auth.uid () = applicant_id
+        and exists (
+            select 1
+            from public.applications
+            where
+                id = application_id
+                and applicant_id = auth.uid ()
+                and status in (
+                    'draft',
+                    'submitted',
+                    'documents_required'
+                )
+        )
+    );
+
+drop policy if exists "application_documents_student_update_editable" on public.application_documents;
+
+create policy "application_documents_student_update_editable" on public.application_documents
+for update
+    using (
+        auth.uid () = applicant_id
+        and exists (
+            select 1
+            from public.applications
+            where
+                id = application_id
+                and applicant_id = auth.uid ()
+                and status in (
+                    'draft',
+                    'submitted',
+                    'documents_required'
+                )
+        )
+    )
+with
+    check (
+        auth.uid () = applicant_id
+        and exists (
+            select 1
+            from public.applications
+            where
+                id = application_id
+                and applicant_id = auth.uid ()
+                and status in (
+                    'draft',
+                    'submitted',
+                    'documents_required'
+                )
+        )
+    );
+
+drop policy if exists "application_documents_student_delete_editable" on public.application_documents;
+
+create policy "application_documents_student_delete_editable" on public.application_documents for delete using (
+    auth.uid () = applicant_id
+    and exists (
+        select 1
+        from public.applications
+        where
+            id = application_id
+            and applicant_id = auth.uid ()
+            and status in (
+                'draft',
+                'submitted',
+                'documents_required'
+            )
+    )
+);
+
+drop policy if exists "application_documents_storage_select_own_or_staff" on storage.objects;
+
+create policy "application_documents_storage_select_own_or_staff" on storage.objects for
+select using (
+        bucket_id = 'application-documents'
+        and (
+            (storage.foldername (name)) [1] = auth.uid ()::text
+            or public.auth_has_role ('admission_officer')
+            or public.auth_has_role ('registrar')
+            or public.auth_has_role ('admin')
+        )
+    );
+
+drop policy if exists "application_documents_storage_insert_editable" on storage.objects;
+
+create policy "application_documents_storage_insert_editable" on storage.objects for insert
+with
+    check (
+        bucket_id = 'application-documents'
+        and (storage.foldername (name)) [1] = auth.uid ()::text
+        and exists (
+            select 1
+            from public.applications
+            where
+                id::text = (storage.foldername (name)) [2]
+                and applicant_id = auth.uid ()
+                and status in (
+                    'draft',
+                    'submitted',
+                    'documents_required'
+                )
+        )
+    );
+
+drop policy if exists "application_documents_storage_delete_editable" on storage.objects;
+
+create policy "application_documents_storage_delete_editable" on storage.objects for delete using (
+    bucket_id = 'application-documents'
+    and (storage.foldername (name)) [1] = auth.uid ()::text
+    and exists (
+        select 1
+        from public.applications
+        where
+            id::text = (storage.foldername (name)) [2]
+            and applicant_id = auth.uid ()
+            and status in (
+                'draft',
+                'submitted',
+                'documents_required'
+            )
+    )
+);
+
+create or replace function public.enforce_student_document_write()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  document public.application_documents;
+begin
+  if tg_op = 'DELETE' then
+    document := old;
+  else
+    document := new;
+  end if;
+
+  if auth.uid() is not null
+     and not (
+       public.auth_has_role('admission_officer')
+       or public.auth_has_role('registrar')
+       or public.auth_has_role('admin')
+     ) then
+    if auth.uid() <> document.applicant_id then
+      raise exception 'You can only modify your own application documents';
+    end if;
+
+    if not exists (
+      select 1
+        from public.applications
+       where id = document.application_id
+         and applicant_id = auth.uid()
+         and status in ('draft', 'submitted', 'documents_required')
+    ) then
+      raise exception 'Documents are locked because admission review has started';
+    end if;
+
+    if tg_op <> 'DELETE' and (
+      new.status <> 'pending_review'
+      or new.reject_reason is not null
+    ) then
+      raise exception 'Student uploads must return to pending review';
+    end if;
+
+    if tg_op = 'UPDATE' and (
+      new.application_id <> old.application_id
+      or new.applicant_id <> old.applicant_id
+      or new.document_type <> old.document_type
+    ) then
+      raise exception 'Document ownership and type cannot be changed';
+    end if;
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists application_documents_enforce_student_write on public.application_documents;
+
+create trigger application_documents_enforce_student_write
+  before insert or update or delete on public.application_documents
+  for each row execute function public.enforce_student_document_write();
 
 create or replace function public.create_application_draft(p_admission_period_id uuid)
 returns public.applications
@@ -155,7 +384,7 @@ begin
     into draft
     from public.applications
    where applicant_id = auth.uid()
-     and status in ('draft', 'documents_required')
+     and status in ('draft', 'submitted', 'documents_required')
    order by created_at desc
    limit 1;
 
@@ -209,7 +438,7 @@ begin
          updated_at = now()
    where id = p_application_id
      and applicant_id = auth.uid()
-     and status in ('draft', 'documents_required')
+     and status in ('draft', 'submitted', 'documents_required')
   returning * into saved;
 
   if not found then
@@ -260,6 +489,38 @@ begin
     raise exception 'Primary program choice required';
   end if;
 
+  if exists (
+    select 1
+      from (
+        values
+          ('national_id'::public.document_type),
+          ('high_school_certificate'::public.document_type),
+          ('birth_certificate'::public.document_type),
+          ('profile_photo'::public.document_type),
+          ('other'::public.document_type)
+      ) as required(document_type)
+     where not exists (
+       select 1
+         from public.application_documents documents
+        where documents.application_id = p_application_id
+          and documents.document_type = required.document_type
+          and documents.status <> 'rejected'
+     )
+  ) then
+    raise exception 'Upload all required verification documents before submitting';
+  end if;
+
+  select *
+    into submitted
+    from public.applications
+   where id = p_application_id
+     and applicant_id = auth.uid()
+     and status = 'submitted';
+
+  if found then
+    return submitted;
+  end if;
+
   update public.applications
      set status = 'submitted',
          progress_percentage = 100,
@@ -267,7 +528,7 @@ begin
          updated_at = now()
    where id = p_application_id
      and applicant_id = auth.uid()
-     and status in ('draft', 'documents_required')
+     and status in ('draft', 'submitted', 'documents_required')
   returning * into submitted;
 
   if not found then
@@ -289,6 +550,7 @@ security definer
 set search_path = public
 as $$
 declare
+  previous_status public.application_status;
   reviewed public.applications;
 begin
   if not (
@@ -303,32 +565,205 @@ begin
     raise exception 'Unsupported review status';
   end if;
 
+  if p_status in ('documents_required', 'rejected')
+     and nullif(trim(coalesce(p_notes, '')), '') is null then
+    raise exception 'Review notes are required for corrections and rejection';
+  end if;
+
+  if char_length(coalesce(p_notes, '')) > 1000 then
+    raise exception 'Review notes must be 1000 characters or fewer';
+  end if;
+
+  if p_status = 'accepted' and exists (
+    select 1
+      from (
+        values
+          ('national_id'::public.document_type),
+          ('high_school_certificate'::public.document_type),
+          ('birth_certificate'::public.document_type),
+          ('profile_photo'::public.document_type),
+          ('other'::public.document_type)
+      ) as required(document_type)
+     where not exists (
+       select 1
+         from public.application_documents documents
+        where documents.application_id = p_application_id
+          and documents.document_type = required.document_type
+          and documents.status = 'verified'
+     )
+  ) then
+    raise exception 'All required verification documents must be verified before approval';
+  end if;
+
+  select status
+    into previous_status
+    from public.applications
+   where id = p_application_id;
+
+  if not found then
+    raise exception 'Application not found';
+  end if;
+
+  if previous_status = 'submitted' and p_status <> 'under_review' then
+    update public.applications
+       set status = 'under_review',
+           updated_at = now()
+     where id = p_application_id;
+  end if;
+
   update public.applications
      set status = p_status,
          updated_at = now()
    where id = p_application_id
   returning * into reviewed;
 
-  if not found then
-    raise exception 'Application not found';
-  end if;
-
   insert into public.application_reviews (application_id, reviewer_id, decision, notes)
   values (p_application_id, auth.uid(), p_status, nullif(trim(p_notes), ''));
+
+  if p_status = 'documents_required' then
+    insert into public.notifications (user_id, title, message, type)
+    values (
+      reviewed.applicant_id,
+      'Corrections Requested by Admission Staff',
+      trim(p_notes),
+      'warning'
+    );
+  end if;
 
   return reviewed;
 end;
 $$;
 
-revoke all on function public.notify_application_status_change() from public;
-revoke all on function public.create_application_draft(uuid) from public;
-revoke all on function public.save_application_draft(uuid, integer, jsonb, jsonb, jsonb, jsonb, uuid) from public;
-revoke all on function public.submit_application(uuid) from public;
-revoke all on function public.submit_application_review(uuid, public.application_status, text) from public;
+create or replace function public.review_application_document(
+  p_document_id uuid,
+  p_status public.document_status,
+  p_reject_reason text default null
+)
+returns public.application_documents
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  reviewed_document public.application_documents;
+  current_application_status public.application_status;
+  rejection_reason text := nullif(trim(coalesce(p_reject_reason, '')), '');
+begin
+  if not (
+    public.auth_has_role('admission_officer')
+    or public.auth_has_role('registrar')
+    or public.auth_has_role('admin')
+  ) then
+    raise exception 'Staff role required';
+  end if;
 
-grant execute on function public.create_application_draft(uuid) to authenticated;
-grant execute on function public.save_application_draft(uuid, integer, jsonb, jsonb, jsonb, jsonb, uuid) to authenticated;
-grant execute on function public.submit_application(uuid) to authenticated;
-grant execute on function public.submit_application_review(uuid, public.application_status, text) to authenticated;
+  if p_status not in ('verified', 'rejected') then
+    raise exception 'Unsupported document review status';
+  end if;
+
+  if p_status = 'rejected' and rejection_reason is null then
+    raise exception 'A correction reason is required for an invalid document';
+  end if;
+
+  update public.application_documents
+     set status = p_status,
+         reject_reason = case when p_status = 'rejected' then rejection_reason else null end,
+         updated_at = now()
+   where id = p_document_id
+  returning * into reviewed_document;
+
+  if not found then
+    raise exception 'Document not found';
+  end if;
+
+  select status
+    into current_application_status
+    from public.applications
+   where id = reviewed_document.application_id;
+
+  if p_status = 'rejected' then
+    perform public.submit_application_review(
+      reviewed_document.application_id,
+      'documents_required',
+      rejection_reason
+    );
+  elsif current_application_status = 'submitted' then
+    perform public.submit_application_review(
+      reviewed_document.application_id,
+      'under_review',
+      'Document verification started.'
+    );
+  end if;
+
+  return reviewed_document;
+end;
+$$;
+
+revoke all on function public.notify_application_status_change ()
+from public;
+
+revoke all on function public.enforce_student_document_write ()
+from public;
+
+revoke all on function public.create_application_draft (uuid)
+from public;
+
+revoke all on function public.save_application_draft (
+    uuid,
+    integer,
+    jsonb,
+    jsonb,
+    jsonb,
+    jsonb,
+    uuid
+)
+from public;
+
+revoke all on function public.submit_application (uuid) from public;
+
+revoke all on function public.submit_application_review (
+    uuid,
+    public.application_status,
+    text
+)
+from public;
+
+revoke all on function public.review_application_document (
+    uuid,
+    public.document_status,
+    text
+)
+from public;
+
+grant
+execute on function public.create_application_draft (uuid) to authenticated;
+
+grant
+execute on function public.save_application_draft (
+    uuid,
+    integer,
+    jsonb,
+    jsonb,
+    jsonb,
+    jsonb,
+    uuid
+) to authenticated;
+
+grant
+execute on function public.submit_application (uuid) to authenticated;
+
+grant
+execute on function public.submit_application_review (
+    uuid,
+    public.application_status,
+    text
+) to authenticated;
+
+grant
+execute on function public.review_application_document (
+    uuid,
+    public.document_status,
+    text
+) to authenticated;
 
 commit;

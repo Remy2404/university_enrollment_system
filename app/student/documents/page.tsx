@@ -10,16 +10,11 @@ import { FileUploadDropzone } from "../../components/ui/FileUploadDropzone";
 import { LoadingState } from "../../components/ui/States";
 
 import { applicationService, documentService } from "@/src/services/application";
+import { canStudentModifyApplication, requiredApplicationDocuments } from "@/src/services/application-document-requirements";
 import { Application, ApplicationDocument } from "@/src/types";
 import { useAuth } from "@/src/providers/auth-provider";
 
-const documentTypes = [
-  { type: "national_id" as const, label: "National ID Card" },
-  { type: "high_school_certificate" as const, label: "High School Certificate" },
-  { type: "birth_certificate" as const, label: "Birth Certificate" },
-  { type: "student_photo" as const, label: "Student Photo" },
-  { type: "application_form" as const, label: "Application Form" },
-];
+const documentTypes = requiredApplicationDocuments;
 
 export default function StudentDocumentsPage() {
   const router = useRouter();
@@ -99,9 +94,8 @@ export default function StudentDocumentsPage() {
   const handleDelete = async (docId: string) => {
     if (!appRecord) return;
     
-    // Safety check: block deleting if already locked/submitted
-    if (appRecord.status !== "draft" && appRecord.status !== "need_correction") {
-      toast.error("Cannot delete documents on a submitted application.");
+    if (!canStudentModifyApplication(appRecord.status)) {
+      toast.error("Documents are locked because admission review has started.");
       return;
     }
 
@@ -119,7 +113,7 @@ export default function StudentDocumentsPage() {
     return <LoadingState rows={5} />;
   }
 
-  const isLocked = appRecord ? (appRecord.status !== "draft" && appRecord.status !== "need_correction") : true;
+  const isLocked = appRecord ? !canStudentModifyApplication(appRecord.status) : true;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -134,13 +128,19 @@ export default function StudentDocumentsPage() {
             Upload the required documents below to verify your eligibility
           </p>
         </div>
-        {appRecord?.status === "draft" && (
+        {appRecord && canStudentModifyApplication(appRecord.status) && (
           <Button variant="primary" onClick={() => router.push("/student/enrollment-form")}>
-            Continue Enrollment
+            Edit Enrollment Form
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         )}
       </div>
+
+      {appRecord?.status === "submitted" && (
+        <div className="p-4 bg-soft-blue/20 border border-soft-blue rounded-bento text-sm text-slate-gray leading-relaxed">
+          <span className="font-bold text-primary-navy">Updates available:</span> Your application is queued for review. You can still complete, replace, or remove files until admission staff begin reviewing it.
+        </div>
+      )}
 
       {isLocked && (
         <div className="p-4 bg-slate-50 border border-[#E2E8F0] rounded-bento text-sm text-slate-gray leading-relaxed">

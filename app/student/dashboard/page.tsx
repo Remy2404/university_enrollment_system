@@ -20,6 +20,11 @@ import { StatusBadge, EnrollmentStatus } from "../../components/ui/StatusBadge";
 import { LoadingState } from "../../components/ui/States";
 
 import { applicationService, documentService } from "@/src/services/application";
+import {
+  canStudentModifyApplication,
+  getDocumentReadiness,
+  requiredApplicationDocuments,
+} from "@/src/services/application-document-requirements";
 import { notificationService } from "@/src/services/notification";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
 import { Application, ApplicationDocument, Notification } from "@/src/types";
@@ -123,16 +128,8 @@ export default function StudentDashboardPage() {
   }
 
   // Calculate missing documents
-  const requiredTypes: { type: ApplicationDocument["type"]; label: string }[] = [
-    { type: "national_id", label: "National ID Card" },
-    { type: "high_school_certificate", label: "High School Certificate" },
-    { type: "birth_certificate", label: "Birth Certificate" },
-    { type: "student_photo", label: "Student Photo" },
-    { type: "application_form", label: "Application Form" }
-  ];
-
-  const uploadedTypes = documents.map(d => d.type);
-  const missingDocs = requiredTypes.filter(r => !uploadedTypes.includes(r.type));
+  const documentReadiness = getDocumentReadiness(documents);
+  const missingDocs = documentReadiness.missing;
   const invalidDocs = documents.filter(d => d.status === "invalid");
   const underReviewDocs = documents.filter(d => d.status === "under_review" || d.status === "uploaded");
   const validDocs = documents.filter(d => d.status === "valid");
@@ -162,10 +159,10 @@ export default function StudentDashboardPage() {
     });
 
     tasks.push({
-      text: `Upload required verification documents (${documents.length}/5 uploaded)`,
+      text: `Upload required verification documents (${documentReadiness.uploadedCount}/${documentReadiness.requiredCount} uploaded)`,
       action: () => router.push("/student/documents"),
-      done: documents.length >= 5,
-      type: documents.length >= 5 ? "success" : "warning"
+      done: documentReadiness.allUploaded,
+      type: documentReadiness.allUploaded ? "success" : "warning"
     });
 
     if (activeStatus === "draft") {
@@ -177,8 +174,15 @@ export default function StudentDashboardPage() {
       });
     } else if (activeStatus === "need_correction") {
       tasks.push({
-        text: "Resolve invalid documents identified by admission staff",
-        action: () => router.push("/student/documents"),
+        text: "Review the staff note, correct your form, and replace invalid documents",
+        action: () => router.push("/student/enrollment-form"),
+        done: false,
+        type: "warning"
+      });
+    } else if (activeStatus === "submitted" && !documentReadiness.allUploaded) {
+      tasks.push({
+        text: "Complete the missing verification documents before staff review",
+        action: () => router.push("/student/enrollment-form"),
         done: false,
         type: "warning"
       });
@@ -208,20 +212,20 @@ export default function StudentDashboardPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Welcome back, {user?.name || "Student"}!</h1>
           <p className="text-sm text-soft-blue/90 max-w-xl leading-relaxed">
             {activeStatus === "draft" && "You're just a few steps away from completing your university application. Make sure to choose your program and upload all documents."}
-            {activeStatus === "submitted" && "Your application has been received. Our team will verify your documents shortly."}
+            {activeStatus === "submitted" && (documentReadiness.allUploaded ? "Your application has been received. Our team will verify your documents shortly." : "Your application is queued, but required verification documents are still missing. Complete them before staff review begins.")}
             {activeStatus === "pending_review" && "Your application is currently in active review. Check the timeline for details."}
-            {activeStatus === "need_correction" && "⚠️ Action required: Admissions staff requested document corrections."}
-            {activeStatus === "approved" && "🎉 Congratulations! You have been admitted to our university."}
+            {activeStatus === "need_correction" && "Action required: Admissions staff requested corrections. Review the note, update your form, and replace invalid documents."}
+            {activeStatus === "approved" && "Congratulations! You have been admitted to our university."}
             {activeStatus === "rejected" && "Your admission application review has been completed."}
           </p>
         </div>
-        {activeStatus === "draft" && (
+        {appRecord && canStudentModifyApplication(activeStatus) && (
           <Button 
             variant="primary" 
             onClick={() => router.push("/student/enrollment-form")}
             className="bg-white text-primary-navy hover:bg-soft-blue border-none font-semibold shrink-0"
           >
-            Complete Application
+            {activeStatus === "draft" ? "Complete Application" : "Update Application"}
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         )}
@@ -317,7 +321,7 @@ export default function StudentDashboardPage() {
               </div>
             )}
           </div>
-          {appRecord && (
+          {appRecord && canStudentModifyApplication(activeStatus) && (
             <button 
               onClick={() => router.push("/student/enrollment-form")}
               className="text-xs text-primary-navy font-bold flex items-center gap-1 hover:underline self-start pt-2"
@@ -338,10 +342,10 @@ export default function StudentDashboardPage() {
             <div className="mt-4 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-gray">Uploaded Documents</span>
-                <span className="font-bold text-academic-blue">{documents.length}/5</span>
+                <span className="font-bold text-academic-blue">{documentReadiness.uploadedCount}/{documentReadiness.requiredCount}</span>
               </div>
               <div className="grid grid-cols-5 gap-1.5 pt-1">
-                {requiredTypes.map((t, idx) => {
+                {requiredApplicationDocuments.map((t, idx) => {
                   const doc = documents.find(d => d.type === t.type);
                   let colorClass = "bg-slate-100 border-slate-200 text-cool-gray";
                   if (doc) {
@@ -371,10 +375,10 @@ export default function StudentDashboardPage() {
                 {underReviewDocs.length > 0 && (
                   <div className="text-primary-navy">{underReviewDocs.length} file(s) awaiting verification check.</div>
                 )}
-                {validDocs.length === 5 && (
+                {validDocs.length === documentReadiness.requiredCount && (
                   <div className="text-success-green font-semibold flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5" />
-                    All 5 documents verified.
+                    All {documentReadiness.requiredCount} documents verified.
                   </div>
                 )}
               </div>

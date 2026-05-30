@@ -14,15 +14,26 @@ import {
   BookOpen,
   Users,
   CheckCircle2,
+  ExternalLink,
+  FileText,
+  X,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { BentoCard } from "../../components/ui/BentoCard";
+import { DocumentStatusCard } from "../../components/ui/DocumentStatusCard";
+import { FileUploadDropzone } from "../../components/ui/FileUploadDropzone";
 import { ProgressStepper } from "../../components/ui/ProgressStepper";
 import { LoadingState } from "../../components/ui/States";
 
-import { applicationService } from "@/src/services/application";
+import { applicationService, documentService } from "@/src/services/application";
+import {
+  canStudentModifyApplication,
+  formatDocumentLabels,
+  getDocumentReadiness,
+  requiredApplicationDocuments,
+} from "@/src/services/application-document-requirements";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
-import { Faculty, Department, Major, User as UserRecord } from "@/src/types";
+import { Application, Faculty, Department, Major, User as UserRecord, ApplicationDocument } from "@/src/types";
 import { useAuth } from "@/src/providers/auth-provider";
 
 const steps = [
@@ -31,6 +42,7 @@ const steps = [
   "Academic Info",
   "Program Select",
   "Guardian Info",
+  "Documents",
   "Review & Submit",
 ];
 
@@ -52,6 +64,11 @@ export default function EnrollmentFormPage() {
 
   const [studentId, setStudentId] = useState<string | null>(null);
   const [appId, setAppId] = useState<string | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<Application["status"]>("draft");
+  const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
+  const [activeUploadType, setActiveUploadType] = useState<ApplicationDocument["type"] | null>(null);
+  const [activePreviewDoc, setActivePreviewDoc] = useState<ApplicationDocument | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const isSubmitInFlight = useRef(false);
 
   // Form states
@@ -86,6 +103,55 @@ export default function EnrollmentFormPage() {
     guardianAddress: "",
   });
 
+  const documentReadiness = getDocumentReadiness(documents);
+  const documentsBlockingSubmission = [...documentReadiness.missing, ...documentReadiness.invalid];
+
+  const refreshDocuments = useCallback(async (applicationId: string) => {
+    const docs = await documentService.getByApplicationId(applicationId);
+    setDocuments(docs);
+  }, []);
+
+  const handleDocumentUpload = async (file: File) => {
+    if (!activeUploadType || !appId || !studentId) {
+      toast.error("Application is not ready.");
+      return;
+    }
+
+    const documentType = activeUploadType;
+    setActiveUploadType(null);
+    setUploadProgress((prev) => ({ ...prev, [documentType]: 50 }));
+    try {
+      await documentService.upload({
+        applicationId: appId,
+        studentId,
+        type: documentType,
+        file,
+      });
+      await refreshDocuments(appId);
+      toast.success(`${file.name} uploaded successfully.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload document.");
+    } finally {
+      setUploadProgress((prev) => {
+        const next = { ...prev };
+        delete next[documentType];
+        return next;
+      });
+    }
+  };
+
+  const handleDocumentDelete = async (documentId: string) => {
+    if (!appId) return;
+
+    try {
+      await documentService.delete(documentId);
+      await refreshDocuments(appId);
+      toast.success("Document deleted.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete document.");
+    }
+  };
+
   const loadFormContext = useCallback(async (user: UserRecord) => {
     try {
       // 1. Load active application
@@ -98,10 +164,10 @@ export default function EnrollmentFormPage() {
       setStudentId(user.id);
       if (app) {
         setAppId(app.id);
+        setApplicationStatus(app.status);
         
-        // Prevent editing if already submitted
-        if (app.status !== "draft" && app.status !== "need_correction") {
-          toast.info("Your application has already been submitted and cannot be edited.");
+        if (!canStudentModifyApplication(app.status)) {
+          toast.info("Admission review has started, so your enrollment form is now locked.");
           router.push("/student/status");
           return;
         }
@@ -135,6 +201,13 @@ export default function EnrollmentFormPage() {
           relationship: app.guardianInfo?.relationship || "Father",
           guardianAddress: app.guardianInfo?.address || "",
         });
+
+        try {
+          await refreshDocuments(app.id);
+        } catch (err) {
+          console.error("Failed to load verification documents", err);
+          toast.error("Failed to load verification documents.");
+        }
       }
 
       // 2. Load program structures
@@ -159,7 +232,7 @@ export default function EnrollmentFormPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [refreshDocuments, router]);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -201,6 +274,7 @@ export default function EnrollmentFormPage() {
         if (!formData.highSchoolName.trim()) return false;
         if (!formData.graduationYear) return false;
         if (!formData.grade.trim()) return false;
+        if (!formData.certificateNumber.trim()) return false;
         return true;
       case 4:
         if (!formData.facultyId) return false;
@@ -211,6 +285,8 @@ export default function EnrollmentFormPage() {
         if (!formData.guardianName.trim()) return false;
         if (!formData.guardianPhone.trim()) return false;
         return true;
+      case 6:
+        return documentReadiness.readyForSubmission;
       default:
         return true;
     }
@@ -218,7 +294,11 @@ export default function EnrollmentFormPage() {
 
   const handleNext = () => {
     if (!validateStep(currentStep)) {
-      toast.error("Please fill in all required fields before proceeding.");
+      if (currentStep === 6) {
+        toast.error(`Upload or replace the required files: ${formatDocumentLabels(documentsBlockingSubmission)}.`);
+      } else {
+        toast.error("Please fill in all required fields before proceeding.");
+      }
       return;
     }
 
@@ -241,7 +321,7 @@ export default function EnrollmentFormPage() {
     setIsSaving(true);
     try {
       await applicationService.update(appId, {
-        progress: Math.min(95, (completedSteps.length + 1) * 16),
+        progress: Math.min(95, (completedSteps.length + 1) * 14),
         personalInfo: {
           fullName: formData.fullName,
           gender: formData.gender,
@@ -295,9 +375,12 @@ export default function EnrollmentFormPage() {
     if (isSubmitInFlight.current) return;
 
     // Run full validation across steps
-    for (let s = 1; s <= 5; s++) {
+    for (let s = 1; s <= 6; s++) {
       if (!validateStep(s)) {
-        toast.error(`Please complete all fields in Step ${s} before submitting.`);
+        const message = s === 6
+          ? `Upload or replace the required files: ${formatDocumentLabels(documentsBlockingSubmission)}.`
+          : `Please complete all fields in Step ${s} before submitting.`;
+        toast.error(message);
         setCurrentStep(s);
         setShowSubmitModal(false);
         return;
@@ -375,11 +458,23 @@ export default function EnrollmentFormPage() {
             Complete the form steps to submit your official application
           </p>
         </div>
-        <Button variant="secondary" onClick={handleSaveDraft} isLoading={isSaving} disabled={currentStep === 6}>
+        <Button variant="secondary" onClick={handleSaveDraft} isLoading={isSaving} disabled={currentStep === 7}>
           <Save className="w-4 h-4 mr-1.5" />
-          Save Draft
+          {applicationStatus === "draft" ? "Save Draft" : "Save Changes"}
         </Button>
       </div>
+
+      {applicationStatus === "submitted" && (
+        <div className="p-4 bg-soft-blue/20 border border-soft-blue rounded-bento text-sm text-slate-gray leading-relaxed">
+          <span className="font-bold text-primary-navy">Updates available:</span> Your application is queued for review. You can still update your details and verification documents until admission staff begin reviewing it.
+        </div>
+      )}
+
+      {applicationStatus === "need_correction" && (
+        <div className="p-4 bg-warning-light/20 border border-warning-amber/40 rounded-bento text-sm text-slate-gray leading-relaxed">
+          <span className="font-bold text-warning-amber">Corrections requested:</span> Review your details and replace any invalid documents before submitting the corrected application.
+        </div>
+      )}
 
       {/* Stepper progress indicator */}
       <BentoCard>
@@ -580,10 +675,11 @@ export default function EnrollmentFormPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-academic-blue mb-1.5">
-                  Certificate Number
+                  Certificate Number <span className="text-error-red">*</span>
                 </label>
                 <input
                   type="text"
+                  required
                   placeholder="HS-2025-99881"
                   value={formData.certificateNumber}
                   onChange={(e) => setFormData({ ...formData, certificateNumber: e.target.value })}
@@ -725,8 +821,43 @@ export default function EnrollmentFormPage() {
             </div>
           )}
 
-          {/* STEP 6: Review & Submit Summary */}
+          {/* STEP 6: Verification Documents */}
           {currentStep === 6 && (
+            <div className="space-y-5">
+              <div className="flex flex-col gap-3 rounded-bento border border-soft-blue bg-soft-blue/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-bold text-academic-blue">Complete your verification checklist</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-gray">
+                    Upload all five required files before submission. You can replace a file later while the application is waiting for staff review.
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-navy">
+                  {documentReadiness.uploadedCount}/{documentReadiness.requiredCount} uploaded
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {requiredApplicationDocuments.map((item) => {
+                  const document = documents.find((entry) => entry.type === item.type);
+                  return (
+                    <DocumentStatusCard
+                      key={item.type}
+                      documentType={item.type}
+                      documentLabel={item.label}
+                      docRecord={document}
+                      uploadProgress={uploadProgress[item.type]}
+                      onUploadClick={() => setActiveUploadType(item.type)}
+                      onDeleteClick={() => document && void handleDocumentDelete(document.id)}
+                      onPreviewClick={() => document && setActivePreviewDoc(document)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 7: Review & Submit Summary */}
+          {currentStep === 7 && (
             <div className="space-y-6">
               <div className="p-4 bg-slate-50 border border-[#E2E8F0] rounded-bento flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-warning-amber shrink-0 mt-0.5" />
@@ -735,7 +866,7 @@ export default function EnrollmentFormPage() {
                     Final Submission Check
                   </p>
                   <p className="text-[11px] text-slate-gray mt-1 leading-relaxed">
-                    Please review all categories below. Once submitted, your application details will be locked for review by the academic admission office.
+                    Please review all categories below. You can still correct details while the application is queued. Editing locks when admission staff begin active review.
                   </p>
                 </div>
               </div>
@@ -794,7 +925,7 @@ export default function EnrollmentFormPage() {
             Back
           </Button>
 
-          {currentStep < 6 ? (
+          {currentStep < 7 ? (
             <Button variant="primary" onClick={handleNext}>
               Next
               <ChevronRight className="w-4 h-4 ml-1.5" />
@@ -808,6 +939,58 @@ export default function EnrollmentFormPage() {
         </div>
       </BentoCard>
 
+      {activeUploadType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs">
+          <div className="w-full max-w-lg space-y-4 rounded-bento border border-[#E2E8F0] bg-white p-6 shadow-lg animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <h3 className="text-md font-bold text-academic-blue">
+                Upload {requiredApplicationDocuments.find(({ type }) => type === activeUploadType)?.label}
+              </h3>
+              <button
+                type="button"
+                aria-label="Close upload dialog"
+                onClick={() => setActiveUploadType(null)}
+                className="text-cool-gray hover:text-primary-navy"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <FileUploadDropzone onFileSelect={handleDocumentUpload} />
+          </div>
+        </div>
+      )}
+
+      {activePreviewDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs">
+          <div className="w-full max-w-2xl space-y-4 rounded-bento border border-[#E2E8F0] bg-white p-6 shadow-lg animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <h3 className="text-md font-bold text-academic-blue">Preview: {activePreviewDoc.name}</h3>
+              <button
+                type="button"
+                aria-label="Close preview dialog"
+                onClick={() => setActivePreviewDoc(null)}
+                className="text-cool-gray hover:text-primary-navy"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex flex-col items-center justify-center rounded-bento border border-dashed border-[#E2E8F0] bg-slate-50 py-20 text-center">
+              <FileText className="mb-4 h-16 w-16 text-primary-navy" />
+              <p className="text-sm font-bold text-academic-blue">{activePreviewDoc.name}</p>
+              <a
+                href={activePreviewDoc.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary-navy px-3 py-2 text-xs font-semibold text-white"
+              >
+                Open secure preview
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Poka-Yoke Double Confirmation Submit Modal */}
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs">
@@ -819,7 +1002,7 @@ export default function EnrollmentFormPage() {
             <div>
               <h3 className="text-lg font-bold text-academic-blue">Confirm Application Submission</h3>
               <p className="text-xs text-slate-gray mt-1.5 leading-relaxed">
-                Are you sure you want to submit your application? This locks all form values from further editing and routes the documents to the admission staff review queue.
+                Are you sure you want to submit your application? This routes your completed document checklist to the admission staff queue. You can still correct details until active review begins.
               </p>
             </div>
 

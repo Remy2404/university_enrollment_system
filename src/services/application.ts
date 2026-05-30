@@ -503,15 +503,13 @@ export const documentService = {
   },
 
   update: async (id: string, updates: Partial<ApplicationDocument>) => {
-    const { data, error } = await createClient()
-      .from("application_documents")
-      .update({
-        status: updates.status ? toDatabaseDocumentStatus(updates.status) : undefined,
-        reject_reason: updates.rejectReason,
-      })
-      .eq("id", id)
-      .select()
-      .single();
+    if (!updates.status) throw new Error("Document review status is required.");
+
+    const { data, error } = await createClient().rpc("review_application_document", {
+      p_document_id: id,
+      p_status: toDatabaseDocumentStatus(updates.status),
+      p_reject_reason: updates.rejectReason || undefined,
+    });
     throwIfError(error, "Failed to update document");
     return createSignedDocument(requireData(data, "Failed to update document"));
   },

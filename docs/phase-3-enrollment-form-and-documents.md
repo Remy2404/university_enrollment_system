@@ -19,7 +19,7 @@ Build the core data collection systems: the multi-step enrollment wizard (steppe
 ## 3. Specifications
 
 ### 3.1 Stepper Enrollment Form
-Use a wizard layout wrapping all fields inside 6 progress steps.
+Use a wizard layout wrapping all fields inside 7 progress steps.
 - **Navigation Controls:** "Back" (Secondary style), "Save Draft" (Outline style), "Next / Submit Application" (Primary Navy style).
 - **Step Components:**
   1. **Personal Information:**
@@ -34,7 +34,11 @@ Use a wizard layout wrapping all fields inside 6 progress steps.
      - Select Study shift (Morning, Afternoon, Evening), Select Academic year.
   5. **Parent/Guardian Information:**
      - Fields: Guardian name, Guardian phone number, Relationship, Guardian address.
-  6. **Review and Submit:**
+  6. **Verification Documents:**
+     - Upload the complete five-file verification checklist inside the enrollment wizard.
+     - Allow preview, replacement, and deletion while the application is a draft, queued submission, or correction request.
+     - Require replacement of rejected files before resubmission.
+  7. **Review and Submit:**
      - Render clean summary cards for all categories.
      - Validation summary list (displays a checklist of steps completed vs steps with errors).
      - "Submit Application" action triggers confirmation modal.
@@ -58,8 +62,10 @@ Use a wizard layout wrapping all fields inside 6 progress steps.
   - Options: Preview file (modal), Replace file, Delete file.
 - **UX Constraints:**
   - Acceptable formats: `PDF`, `JPG`, `PNG` (show clear instructions).
-  - Maximum file size: `5MB` (reject file with inline warning alert if exceeded).
+  - Maximum file size: `10MB` (reject file with inline warning alert if exceeded).
   - Display reject reasons clearly when status is `Invalid` (with a prompt to re-upload).
+  - Keep form fields and document replacement editable until active staff review begins.
+  - Re-open both form and document editing when staff request corrections.
 
 ---
 
@@ -68,5 +74,7 @@ Use a wizard layout wrapping all fields inside 6 progress steps.
 - [x] Faculty select change updates Major select choices dynamically.
 - [x] Review step shows accurate information inputted from previous steps.
 - [x] Dropzone accepts drag-and-drop files and rejects unsupported file extensions.
-- [x] Large files (>5MB) trigger an error message and block uploading.
+- [x] Large files (>10MB) trigger an error message and block uploading.
 - [x] Status badges colors correspond correctly to specification rules.
+- [x] Submitted applications remain editable while queued, then lock when active review begins.
+- [x] Staff correction requests unlock the form and rejected-document replacement flow.

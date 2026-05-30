@@ -55,7 +55,7 @@ Build the administrative review system for university admission staff, including
     - Action inputs for the active document:
       - "Mark as Valid" (Approved state).
       - "Mark as Invalid" (Rejected state, requires a text description of the issue).
-      - Button: "Request Re-upload" (sends alert notification to student).
+      - Marking a file invalid automatically requests a re-upload, unlocks student form and document editing, and sends the staff reason to the student's notifications.
 
 ---
 
@@ -64,4 +64,5 @@ Build the administrative review system for university admission staff, including
 - [x] Tab switching transitions smoothly and renders clean, form-locked information layouts.
 - [x] Status actions require a double confirmation modal (Poka-Yoke principle).
 - [x] Marking a document as invalid disables the "Mark as Valid" action and prompts for a failure reason.
+- [x] Invalid document feedback is delivered to student notifications and opens the correction workflow.
 - [x] Responsive design hides non-critical columns on table on tablet/mobile screens.

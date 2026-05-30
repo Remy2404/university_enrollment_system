@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, Eye, Trash2, Upload, FileText } from "lucide-react";
+import { AlertCircle, Eye, Trash2, Upload, FileText, RefreshCw } from "lucide-react";
 import { ApplicationDocument } from "@/src/types";
 import { StatusBadge, type EnrollmentStatus } from "./StatusBadge";
 import { Button } from "./Button";
@@ -91,10 +91,16 @@ export function DocumentStatusCard({
               Preview
             </Button>
             {!disabled && (
-              <Button variant="secondary" onClick={onDeleteClick} className="text-error-red border-red-100 hover:bg-red-50 h-8 text-xs px-3">
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
-                Delete
-              </Button>
+              <>
+                <Button variant="secondary" onClick={onUploadClick} className="h-8 text-xs px-3">
+                  <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                  Replace
+                </Button>
+                <Button variant="secondary" onClick={onDeleteClick} className="text-error-red border-red-100 hover:bg-red-50 h-8 text-xs px-3">
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Delete
+                </Button>
+              </>
             )}
           </>
         )}

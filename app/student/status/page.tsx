@@ -67,7 +67,7 @@ export default function StudentStatusPage() {
   // Map progress to steps
   const steps = [
     { label: "Draft", status: "draft", desc: "Application started and details being filled" },
-    { label: "Submitted", status: "submitted", desc: "Application locked and submitted for review" },
+    { label: "Submitted", status: "submitted", desc: "Application queued; updates remain available until active review starts" },
     { label: "In Review", status: "pending_review", desc: "Admission team is verifying academic details and files" },
     { label: "Final Decision", status: "decision", desc: "Official admission result approved or rejected" },
   ];
@@ -135,7 +135,7 @@ export default function StudentStatusPage() {
           </h2>
           <p className="text-sm text-slate-gray max-w-xl">
             {appRecord.status === "draft" && "Your application is currently in draft mode. You can edit your choices, upload details, and submit whenever you are ready."}
-            {appRecord.status === "submitted" && "We have received your application. It is queued in line for our admission staff to verify and process."}
+            {appRecord.status === "submitted" && "We have received your application. While it is queued, you can still update your form and finish any missing verification documents before active review starts."}
             {appRecord.status === "pending_review" && "Our staff is reviewing your academic transcripts, national ID, and selected program. This step typically takes 2-3 business days."}
             {appRecord.status === "need_correction" && "Some files you uploaded did not meet the guidelines or were illegible. Please check the review notes below and update them."}
             {appRecord.status === "approved" && "Your enrollment application meets all entry requirements. Welcome to the university! Please check your email for official enrollment next steps."}
@@ -144,15 +144,15 @@ export default function StudentStatusPage() {
         </div>
 
         <div className="flex flex-col gap-3 min-w-[200px]">
-          {appRecord.status === "draft" && (
+          {(appRecord.status === "draft" || appRecord.status === "submitted") && (
             <Button variant="primary" onClick={() => router.push("/student/enrollment-form")} className="w-full justify-center">
-              Continue Form
+              {appRecord.status === "draft" ? "Continue Form" : "Update Form & Documents"}
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           )}
           {appRecord.status === "need_correction" && (
-            <Button variant="primary" onClick={() => router.push("/student/documents")} className="w-full justify-center bg-warning-amber hover:bg-warning-amber/90 border-none">
-              Correct Documents
+            <Button variant="primary" onClick={() => router.push("/student/enrollment-form")} className="w-full justify-center bg-warning-amber hover:bg-warning-amber/90 border-none">
+              Correct Form & Documents
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           )}
@@ -236,7 +236,7 @@ export default function StudentStatusPage() {
               </p>
               {appRecord.status === "need_correction" && (
                 <p className="text-[11px] text-cool-gray">
-                  Please proceed to the Documents tab and re-upload files in conflict.
+                  Open the enrollment form to correct any inaccurate details and replace files that need attention.
                 </p>
               )}
             </BentoCard>
