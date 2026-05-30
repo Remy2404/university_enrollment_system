@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -11,7 +11,6 @@ import {
   CheckCircle,
   AlertTriangle,
   User,
-  Phone,
   BookOpen,
   Users,
   CheckCircle2,
@@ -23,7 +22,7 @@ import { LoadingState } from "../../components/ui/States";
 
 import { applicationService } from "@/src/services/application";
 import { facultyService, departmentService, majorService } from "@/src/services/program";
-import { Faculty, Department, Major, Application } from "@/src/types";
+import { Faculty, Department, Major, User as UserRecord } from "@/src/types";
 
 const steps = [
   "Personal Info",
@@ -52,6 +51,7 @@ export default function EnrollmentFormPage() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
   const [appId, setAppId] = useState<string | null>(null);
+  const isSubmitInFlight = useRef(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -69,7 +69,7 @@ export default function EnrollmentFormPage() {
     city: "",
     // Academic Info
     highSchoolName: "",
-    graduationYear: "" as any,
+    graduationYear: "" as string | number,
     grade: "",
     certificateNumber: "",
     // Program Select
@@ -85,27 +85,17 @@ export default function EnrollmentFormPage() {
     guardianAddress: "",
   });
 
-  useEffect(() => {
-    const stored = localStorage.getItem("ues_user");
-    if (!stored) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const user = JSON.parse(stored);
-      setStudentId(user.id);
-      setStudentName(user.name);
-      loadFormContext(user.id);
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
-
-  const loadFormContext = async (uid: string) => {
+  const loadFormContext = useCallback(async (user: UserRecord) => {
     try {
       // 1. Load active application
-      const app = await applicationService.getByStudentId(uid);
+      const app = await applicationService.getOrCreateDraft({
+        studentId: user.id,
+        studentName: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+      });
+      setStudentId(user.id);
+      setStudentName(user.name);
       if (app) {
         setAppId(app.id);
         
@@ -164,12 +154,30 @@ export default function EnrollmentFormPage() {
         setFilteredMajors(mjs.filter((m) => m.departmentId === app.programSelection.departmentId));
       }
 
-    } catch (error) {
+    } catch {
       toast.error("Failed to load application form context.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("ues_user");
+    if (!stored) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const user = JSON.parse(stored) as UserRecord;
+      const timeoutId = window.setTimeout(() => {
+        void loadFormContext(user);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
+    } catch {
+      router.push("/login");
+    }
+  }, [loadFormContext, router]);
 
   // Handle cascading dropdowns
   const handleFacultyChange = (fId: string) => {
@@ -232,7 +240,10 @@ export default function EnrollmentFormPage() {
   };
 
   const handleSaveDraft = async () => {
-    if (!appId) return;
+    if (!appId) {
+      toast.error("Application draft is not ready. Please refresh and try again.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -282,7 +293,13 @@ export default function EnrollmentFormPage() {
   };
 
   const handleSubmitApplication = async () => {
-    if (!appId || !studentId) return;
+    if (!appId || !studentId) {
+      toast.error("Application draft is not ready. Please refresh and try again.");
+      setShowSubmitModal(false);
+      return;
+    }
+
+    if (isSubmitInFlight.current) return;
 
     // Run full validation across steps
     for (let s = 1; s <= 5; s++) {
@@ -294,6 +311,7 @@ export default function EnrollmentFormPage() {
       }
     }
 
+    isSubmitInFlight.current = true;
     setIsSaving(true);
     try {
       // 1. Update draft content first
@@ -338,9 +356,10 @@ export default function EnrollmentFormPage() {
       
       toast.success("Application submitted successfully!");
       router.push("/student/status");
-    } catch (e) {
+    } catch {
       toast.error("Failed to submit application. Please try again.");
     } finally {
+      isSubmitInFlight.current = false;
       setIsSaving(false);
       setShowSubmitModal(false);
     }

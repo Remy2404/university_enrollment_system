@@ -1,6 +1,64 @@
 import { apiClient, ApiQueryOptions } from "../lib/api-client";
 import { Application, ApplicationDocument } from "../types";
 
+interface DraftApplicationOwner {
+  studentId: string;
+  studentName: string;
+  email?: string;
+  phoneNumber?: string;
+}
+
+const pendingDraftCreates = new Map<string, Promise<Application>>();
+
+function buildDraftApplication({
+  studentId,
+  studentName,
+  email = "",
+  phoneNumber = "",
+}: DraftApplicationOwner): Omit<Application, "id"> {
+  return {
+    studentId,
+    status: "draft",
+    progress: 10,
+    personalInfo: {
+      fullName: studentName,
+      gender: "",
+      dateOfBirth: "",
+      nationality: "Cambodian",
+      nationalId: "",
+      photoUrl: "",
+    },
+    contactInfo: {
+      phone: phoneNumber,
+      email,
+      address: "",
+      city: "",
+    },
+    academicBackground: {
+      highSchoolName: "",
+      graduationYear: null,
+      grade: "",
+      certificateNumber: "",
+    },
+    programSelection: {
+      facultyId: "",
+      departmentId: "",
+      majorId: "",
+      shift: "",
+      academicYear: "",
+    },
+    guardianInfo: {
+      name: "",
+      phone: "",
+      relationship: "",
+      address: "",
+    },
+    submittedAt: null,
+    updatedAt: new Date().toISOString(),
+    reviewerComments: "",
+  };
+}
+
 export const applicationService = {
   getAll: (options?: ApiQueryOptions) => {
     return apiClient.get<Application[]>("/applications", options);
@@ -20,6 +78,22 @@ export const applicationService = {
       id: `APP-2026-${String(Math.floor(1000 + Math.random() * 9000))}`,
     };
     return apiClient.post<Application>("/applications", data);
+  },
+  createDraft: (owner: DraftApplicationOwner) => {
+    return applicationService.create(buildDraftApplication(owner));
+  },
+  getOrCreateDraft: async (owner: DraftApplicationOwner) => {
+    const existing = await applicationService.getByStudentId(owner.studentId);
+    if (existing) return existing;
+
+    const pendingCreate = pendingDraftCreates.get(owner.studentId);
+    if (pendingCreate) return pendingCreate;
+
+    const createRequest = applicationService
+      .createDraft(owner)
+      .finally(() => pendingDraftCreates.delete(owner.studentId));
+    pendingDraftCreates.set(owner.studentId, createRequest);
+    return createRequest;
   },
   update: (id: string, updates: Partial<Application>) => {
     return apiClient.patch<Application>(`/applications/${id}`, {

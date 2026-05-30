@@ -381,6 +381,48 @@
       "submittedAt": null,
       "updatedAt": "2026-05-15T03:40:00Z",
       "reviewerComments": ""
+    },
+    {
+      "studentId": "diagnosis-fixed-flow",
+      "status": "draft",
+      "progress": 10,
+      "personalInfo": {
+        "fullName": "Fixed Flow Student",
+        "gender": "",
+        "dateOfBirth": "",
+        "nationality": "Cambodian",
+        "nationalId": "",
+        "photoUrl": ""
+      },
+      "contactInfo": {
+        "phone": "+855 12 345 678",
+        "email": "fixedflow@student.edu.kh",
+        "address": "",
+        "city": ""
+      },
+      "academicBackground": {
+        "highSchoolName": "",
+        "graduationYear": null,
+        "grade": "",
+        "certificateNumber": ""
+      },
+      "programSelection": {
+        "facultyId": "",
+        "departmentId": "",
+        "majorId": "",
+        "shift": "",
+        "academicYear": ""
+      },
+      "guardianInfo": {
+        "name": "",
+        "phone": "",
+        "relationship": "",
+        "address": ""
+      },
+      "submittedAt": null,
+      "updatedAt": "2026-05-30T08:13:43.686Z",
+      "reviewerComments": "",
+      "id": "CkDUIADbVT8"
     }
   ],
   "documents": [
@@ -402,7 +444,7 @@
       "type": "high_school_certificate",
       "name": "high_school_cert_sok_dara.pdf",
       "url": "/uploads/high_school_cert_sok_dara.pdf",
-      "status": "under_review",
+      "status": "valid",
       "uploadedAt": "2026-05-10T08:20:00Z",
       "rejectReason": ""
     },
@@ -663,5 +705,6 @@
     "rejectedApplications": 0,
     "needCorrection": 1,
     "draftApplications": 1
-  }
+  },
+  "$schema": "./node_modules/json-server/schema.json"
 }

@@ -1,4 +1,5 @@
 import { apiClient, ApiQueryOptions } from "../lib/api-client";
+import { applicationService } from "./application";
 import { User } from "../types";
 
 export const userService = {
@@ -51,54 +52,17 @@ export const userService = {
     });
 
     // 3. Create Draft Application
-    const appId = `APP-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
-    await apiClient.post("/applications", {
-      id: appId,
+    const application = await applicationService.createDraft({
       studentId: user.id,
-      status: "draft",
-      progress: 10,
-      personalInfo: {
-        fullName: data.fullName,
-        gender: "",
-        dateOfBirth: "",
-        nationality: "Cambodian",
-        nationalId: "",
-        photoUrl: "",
-      },
-      contactInfo: {
-        phone: data.phoneNumber,
-        email: data.email,
-        address: "",
-        city: "",
-      },
-      academicBackground: {
-        highSchoolName: "",
-        graduationYear: null,
-        grade: "",
-        certificateNumber: "",
-      },
-      programSelection: {
-        facultyId: "",
-        departmentId: "",
-        majorId: "",
-        shift: "",
-        academicYear: "",
-      },
-      guardianInfo: {
-        name: "",
-        phone: "",
-        relationship: "",
-        address: "",
-      },
-      submittedAt: null,
-      updatedAt: new Date().toISOString(),
-      reviewerComments: "",
+      studentName: data.fullName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
     });
 
     // 4. Create timeline event for Application Created
     await apiClient.post("/timelineEvents", {
       id: `evt-${Date.now()}`,
-      applicationId: appId,
+      applicationId: application.id,
       status: "draft",
       title: "Application Created",
       description: "Application initialized as draft",

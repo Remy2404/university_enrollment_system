@@ -40,18 +40,6 @@ export default function StudentLayout({
     };
   }, [loadSession]);
 
-  const handleRoleChange = (newRole: "student" | "staff" | "admin") => {
-    setRole(newRole);
-    // Sync to local storage for testing other portal perspectives
-    const stored = localStorage.getItem("ues_user");
-    if (stored) {
-      try {
-        const user = JSON.parse(stored);
-        user.role = newRole;
-        localStorage.setItem("ues_user", JSON.stringify(user));
-      } catch (e) {}
-    }
-  };
 
   if (loading) {
     return (
@@ -63,7 +51,7 @@ export default function StudentLayout({
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <AppSidebar role={role} onRoleChange={handleRoleChange} />
+      <AppSidebar role={role} />
       <div className="flex flex-1 flex-col min-w-0">
         <TopBar userName={userName} userRole={role} />
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">{children}</main>

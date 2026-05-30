@@ -22,15 +22,13 @@ import {
   Settings,
   Menu,
   X,
-  ShieldAlert
 } from "lucide-react";
 
 interface AppSidebarProps {
   role?: "student" | "staff" | "admin";
-  onRoleChange?: (role: "student" | "staff" | "admin") => void;
 }
 
-export function AppSidebar({ role = "student", onRoleChange }: AppSidebarProps) {
+export function AppSidebar({ role = "student" }: AppSidebarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -131,24 +129,6 @@ export function AppSidebar({ role = "student", onRoleChange }: AppSidebarProps) 
           })}
         </nav>
 
-        {/* Demo Role Switcher (Kaizen feature for easier presentation/testing) */}
-        {onRoleChange && (
-          <div className="mx-4 my-2 p-3 rounded-bento-sm bg-slate-50 border border-[#E2E8F0]">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-gray mb-2">
-              <ShieldAlert className="w-3.5 h-3.5 text-warning-amber" />
-              Demo View Mode
-            </div>
-            <select
-              value={role}
-              onChange={(e) => onRoleChange(e.target.value as any)}
-              className="w-full text-xs bg-white border border-[#E2E8F0] rounded-md h-8 px-2 focus:outline-none focus:ring-1 focus:ring-primary-navy"
-            >
-              <option value="student">Student Portal</option>
-              <option value="staff">Staff Portal</option>
-              <option value="admin">Admin Portal</option>
-            </select>
-          </div>
-        )}
 
         {/* Footer Logout */}
         <div className="border-t border-[#E2E8F0] p-4">

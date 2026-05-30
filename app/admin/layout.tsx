@@ -49,26 +49,6 @@ export default function AdminLayout({
     };
   }, [loadSession]);
 
-  const handleRoleChange = (newRole: "student" | "staff" | "admin") => {
-    setRole(newRole);
-    const stored = localStorage.getItem("ues_user");
-    if (stored) {
-      try {
-        const user = JSON.parse(stored);
-        user.role = newRole;
-        localStorage.setItem("ues_user", JSON.stringify(user));
-        
-        // Direct to corresponding dashboard
-        if (newRole === "student") {
-          router.push("/student/dashboard");
-        } else if (newRole === "staff") {
-          router.push("/staff/dashboard");
-        } else if (newRole === "admin") {
-          router.push("/admin/programs");
-        }
-      } catch (e) {}
-    }
-  };
 
   if (loading) {
     return (
@@ -80,7 +60,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <AppSidebar role={role} onRoleChange={handleRoleChange} />
+      <AppSidebar role={role} />
       <div className="flex flex-1 flex-col min-w-0">
         <TopBar userName={userName} userRole={role} />
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">{children}</main>
