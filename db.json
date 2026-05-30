@@ -1,0 +1,496 @@
+{
+  "users": [
+    {
+      "id": "usr-1",
+      "name": "Sok Dara",
+      "email": "sok.dara@student.edu.kh",
+      "role": "student",
+      "phoneNumber": "+855 12 345 678",
+      "avatarUrl": ""
+    },
+    {
+      "id": "usr-2",
+      "name": "Chan Sopheak",
+      "email": "chan.sopheak@student.edu.kh",
+      "role": "student",
+      "phoneNumber": "+855 99 876 543",
+      "avatarUrl": ""
+    },
+    {
+      "id": "usr-3",
+      "name": "Mey Sreyneang",
+      "email": "mey.sreyneang@student.edu.kh",
+      "role": "student",
+      "phoneNumber": "+855 77 111 222",
+      "avatarUrl": ""
+    },
+    {
+      "id": "usr-4",
+      "name": "Kim Vuthy",
+      "email": "kim.vuthy@student.edu.kh",
+      "role": "student",
+      "phoneNumber": "+855 15 555 666",
+      "avatarUrl": ""
+    },
+    {
+      "id": "usr-5",
+      "name": "Phon Ramy",
+      "email": "phon.ramy@student.edu.kh",
+      "role": "student",
+      "phoneNumber": "+855 88 444 999",
+      "avatarUrl": ""
+    },
+    {
+      "id": "usr-staff-1",
+      "name": "Keo Sarath",
+      "email": "keo.sarath@staff.edu.kh",
+      "role": "staff",
+      "phoneNumber": "+855 12 999 888",
+      "avatarUrl": ""
+    },
+    {
+      "id": "usr-admin-1",
+      "name": "Dr. Ouk Vichea",
+      "email": "ouk.vichea@admin.edu.kh",
+      "role": "admin",
+      "phoneNumber": "+855 11 222 333",
+      "avatarUrl": ""
+    }
+  ],
+  "faculties": [
+    {
+      "id": "fac-1",
+      "name": "Faculty of Information Technology",
+      "code": "FIT",
+      "description": "Excellence in computing education and research.",
+      "status": "active"
+    },
+    {
+      "id": "fac-2",
+      "name": "Faculty of Business Administration",
+      "code": "FBA",
+      "description": "Developing future business leaders and entrepreneurs.",
+      "status": "active"
+    },
+    {
+      "id": "fac-3",
+      "name": "Faculty of Engineering",
+      "code": "FE",
+      "description": "Innovating infrastructure and technology solution systems.",
+      "status": "active"
+    },
+    {
+      "id": "fac-4",
+      "name": "Faculty of Law and Public Affairs",
+      "code": "FLPA",
+      "description": "Cultivating legal minds and public administration experts.",
+      "status": "active"
+    },
+    {
+      "id": "fac-5",
+      "name": "Faculty of Education",
+      "code": "FED",
+      "description": "Training professional educators for the next generation.",
+      "status": "active"
+    }
+  ],
+  "majors": [
+    {
+      "id": "maj-1",
+      "facultyId": "fac-1",
+      "name": "Software Engineering",
+      "description": "Software design, architecture, and engineering principles.",
+      "status": "active"
+    },
+    {
+      "id": "maj-2",
+      "facultyId": "fac-1",
+      "name": "Computer Science",
+      "description": "Core computer theories, algorithms, and logic systems.",
+      "status": "active"
+    },
+    {
+      "id": "maj-3",
+      "facultyId": "fac-1",
+      "name": "Information Systems",
+      "description": "Bridging business operations and technology implementation.",
+      "status": "active"
+    },
+    {
+      "id": "maj-4",
+      "facultyId": "fac-1",
+      "name": "Cybersecurity",
+      "description": "Network protection, defensive computing, and threat prevention.",
+      "status": "active"
+    },
+    {
+      "id": "maj-5",
+      "facultyId": "fac-2",
+      "name": "Business Management",
+      "description": "Strategic planning, operations management, and leadership.",
+      "status": "active"
+    },
+    {
+      "id": "maj-6",
+      "facultyId": "fac-3",
+      "name": "Civil Engineering",
+      "description": "Structural analysis, road design, and building construction.",
+      "status": "active"
+    }
+  ],
+  "applications": [
+    {
+      "id": "APP-2026-0001",
+      "studentId": "usr-1",
+      "status": "pending_review",
+      "progress": 85,
+      "personalInfo": {
+        "fullName": "Sok Dara",
+        "gender": "Male",
+        "dateOfBirth": "2008-04-12",
+        "nationality": "Cambodian",
+        "nationalId": "123456789",
+        "photoUrl": "/uploads/sok_dara_photo.jpg"
+      },
+      "contactInfo": {
+        "phone": "+855 12 345 678",
+        "email": "sok.dara@student.edu.kh",
+        "address": "St. 271, Sangkat Boeung Keng Kang",
+        "city": "Phnom Penh"
+      },
+      "academicBackground": {
+        "highSchoolName": "Bak Touk High School",
+        "graduationYear": 2025,
+        "grade": "A",
+        "certificateNumber": "HS-2025-99881"
+      },
+      "programSelection": {
+        "facultyId": "fac-1",
+        "majorId": "maj-1",
+        "shift": "Morning",
+        "academicYear": "2026-2027"
+      },
+      "guardianInfo": {
+        "name": "Sok Meas",
+        "phone": "+855 12 111 222",
+        "relationship": "Father",
+        "address": "St. 271, Sangkat Boeung Keng Kang, Phnom Penh"
+      },
+      "submittedAt": "2026-05-10T08:30:00Z",
+      "updatedAt": "2026-05-10T08:30:00Z",
+      "reviewerComments": ""
+    },
+    {
+      "id": "APP-2026-0002",
+      "studentId": "usr-2",
+      "status": "approved",
+      "progress": 100,
+      "personalInfo": {
+        "fullName": "Chan Sopheak",
+        "gender": "Male",
+        "dateOfBirth": "2007-09-25",
+        "nationality": "Cambodian",
+        "nationalId": "987654321",
+        "photoUrl": "/uploads/chan_sopheak_photo.jpg"
+      },
+      "contactInfo": {
+        "phone": "+855 99 876 543",
+        "email": "chan.sopheak@student.edu.kh",
+        "address": "St. 150, Sangkat Tuol Kouk",
+        "city": "Phnom Penh"
+      },
+      "academicBackground": {
+        "highSchoolName": "Sisowath High School",
+        "graduationYear": 2025,
+        "grade": "B",
+        "certificateNumber": "HS-2025-99882"
+      },
+      "programSelection": {
+        "facultyId": "fac-1",
+        "majorId": "maj-2",
+        "shift": "Afternoon",
+        "academicYear": "2026-2027"
+      },
+      "guardianInfo": {
+        "name": "Chan Samnang",
+        "phone": "+855 99 333 444",
+        "relationship": "Father",
+        "address": "St. 150, Sangkat Tuol Kouk, Phnom Penh"
+      },
+      "submittedAt": "2026-05-11T09:15:00Z",
+      "updatedAt": "2026-05-13T14:20:00Z",
+      "reviewerComments": "All credentials verified. Admission approved."
+    },
+    {
+      "id": "APP-2026-0003",
+      "studentId": "usr-3",
+      "status": "need_correction",
+      "progress": 65,
+      "personalInfo": {
+        "fullName": "Mey Sreyneang",
+        "gender": "Female",
+        "dateOfBirth": "2008-01-30",
+        "nationality": "Cambodian",
+        "nationalId": "456123789",
+        "photoUrl": "/uploads/mey_sreyneang_photo.jpg"
+      },
+      "contactInfo": {
+        "phone": "+855 77 111 222",
+        "email": "mey.sreyneang@student.edu.kh",
+        "address": "St. 371, Sangkat Steung Meanchey",
+        "city": "Phnom Penh"
+      },
+      "academicBackground": {
+        "highSchoolName": "Hun Sen Steung Meanchey High School",
+        "graduationYear": 2025,
+        "grade": "C",
+        "certificateNumber": "HS-2025-99883"
+      },
+      "programSelection": {
+        "facultyId": "fac-2",
+        "majorId": "maj-5",
+        "shift": "Morning",
+        "academicYear": "2026-2027"
+      },
+      "guardianInfo": {
+        "name": "Mey Sopha",
+        "phone": "+855 77 555 777",
+        "relationship": "Mother",
+        "address": "St. 371, Sangkat Steung Meanchey, Phnom Penh"
+      },
+      "submittedAt": "2026-05-12T10:00:00Z",
+      "updatedAt": "2026-05-14T11:45:00Z",
+      "reviewerComments": "High school certificate scan is too blurry to read. Please re-upload a clear file."
+    },
+    {
+      "id": "APP-2026-0004",
+      "studentId": "usr-4",
+      "status": "draft",
+      "progress": 40,
+      "personalInfo": {
+        "fullName": "Kim Vuthy",
+        "gender": "Male",
+        "dateOfBirth": "2007-11-05",
+        "nationality": "Cambodian",
+        "nationalId": "789456123",
+        "photoUrl": ""
+      },
+      "contactInfo": {
+        "phone": "+855 15 555 666",
+        "email": "kim.vuthy@student.edu.kh",
+        "address": "St. 598, Sangkat Phnom Penh Thmey",
+        "city": "Phnom Penh"
+      },
+      "academicBackground": {
+        "highSchoolName": "",
+        "graduationYear": null,
+        "grade": "",
+        "certificateNumber": ""
+      },
+      "programSelection": {
+        "facultyId": "",
+        "majorId": "",
+        "shift": "",
+        "academicYear": ""
+      },
+      "guardianInfo": {
+        "name": "",
+        "phone": "",
+        "relationship": "",
+        "address": ""
+      },
+      "submittedAt": null,
+      "updatedAt": "2026-05-15T03:40:00Z",
+      "reviewerComments": ""
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-1",
+      "applicationId": "APP-2026-0001",
+      "studentId": "usr-1",
+      "type": "national_id",
+      "name": "national_id_sok_dara.pdf",
+      "url": "/uploads/national_id_sok_dara.pdf",
+      "status": "valid",
+      "uploadedAt": "2026-05-10T08:15:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-2",
+      "applicationId": "APP-2026-0001",
+      "studentId": "usr-1",
+      "type": "high_school_certificate",
+      "name": "high_school_cert_sok_dara.pdf",
+      "url": "/uploads/high_school_cert_sok_dara.pdf",
+      "status": "under_review",
+      "uploadedAt": "2026-05-10T08:20:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-3",
+      "applicationId": "APP-2026-0001",
+      "studentId": "usr-1",
+      "type": "birth_certificate",
+      "name": "birth_cert_sok_dara.pdf",
+      "url": "/uploads/birth_cert_sok_dara.pdf",
+      "status": "under_review",
+      "uploadedAt": "2026-05-10T08:22:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-4",
+      "applicationId": "APP-2026-0001",
+      "studentId": "usr-1",
+      "type": "student_photo",
+      "name": "photo_sok_dara.jpg",
+      "url": "/uploads/sok_dara_photo.jpg",
+      "status": "valid",
+      "uploadedAt": "2026-05-10T08:10:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-5",
+      "applicationId": "APP-2026-0002",
+      "studentId": "usr-2",
+      "type": "national_id",
+      "name": "id_chan_sopheak.pdf",
+      "url": "/uploads/id_chan_sopheak.pdf",
+      "status": "valid",
+      "uploadedAt": "2026-05-11T09:00:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-6",
+      "applicationId": "APP-2026-0002",
+      "studentId": "usr-2",
+      "type": "high_school_certificate",
+      "name": "high_school_cert_chan_sopheak.pdf",
+      "url": "/uploads/high_school_cert_chan_sopheak.pdf",
+      "status": "valid",
+      "uploadedAt": "2026-05-11T09:05:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-7",
+      "applicationId": "APP-2026-0002",
+      "studentId": "usr-2",
+      "type": "birth_certificate",
+      "name": "birth_cert_chan_sopheak.pdf",
+      "url": "/uploads/birth_cert_chan_sopheak.pdf",
+      "status": "valid",
+      "uploadedAt": "2026-05-11T09:10:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-8",
+      "applicationId": "APP-2026-0002",
+      "studentId": "usr-2",
+      "type": "student_photo",
+      "name": "photo_chan_sopheak.jpg",
+      "url": "/uploads/chan_sopheak_photo.jpg",
+      "status": "valid",
+      "uploadedAt": "2026-05-11T08:55:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-9",
+      "applicationId": "APP-2026-0003",
+      "studentId": "usr-3",
+      "type": "national_id",
+      "name": "national_id_mey_sreyneang.pdf",
+      "url": "/uploads/national_id_mey_sreyneang.pdf",
+      "status": "valid",
+      "uploadedAt": "2026-05-12T09:40:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-10",
+      "applicationId": "APP-2026-0003",
+      "studentId": "usr-3",
+      "type": "high_school_certificate",
+      "name": "blurry_cert_mey_sreyneang.pdf",
+      "url": "/uploads/blurry_cert_mey_sreyneang.pdf",
+      "status": "invalid",
+      "uploadedAt": "2026-05-12T09:45:00Z",
+      "rejectReason": "High school certificate scan is too blurry to read. Please re-upload a clear file."
+    },
+    {
+      "id": "doc-11",
+      "applicationId": "APP-2026-0003",
+      "studentId": "usr-3",
+      "type": "birth_certificate",
+      "name": "birth_cert_mey_sreyneang.pdf",
+      "url": "/uploads/birth_cert_mey_sreyneang.pdf",
+      "status": "valid",
+      "uploadedAt": "2026-05-12T09:50:00Z",
+      "rejectReason": ""
+    },
+    {
+      "id": "doc-12",
+      "applicationId": "APP-2026-0003",
+      "studentId": "usr-3",
+      "type": "student_photo",
+      "name": "photo_mey_sreyneang.jpg",
+      "url": "/uploads/mey_sreyneang_photo.jpg",
+      "status": "valid",
+      "uploadedAt": "2026-05-12T09:35:00Z",
+      "rejectReason": ""
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "userId": "usr-1",
+      "title": "Application Submitted",
+      "message": "Your application APP-2026-0001 has been submitted successfully.",
+      "type": "success",
+      "read": true,
+      "createdAt": "2026-05-10T08:30:00Z"
+    },
+    {
+      "id": "notif-2",
+      "userId": "usr-1",
+      "title": "Documents Under Review",
+      "message": "Your uploaded documents are now under review by our admissions team.",
+      "type": "info",
+      "read": false,
+      "createdAt": "2026-05-10T08:35:00Z"
+    },
+    {
+      "id": "notif-3",
+      "userId": "usr-2",
+      "title": "Enrollment Approved",
+      "message": "Congratulations! Your enrollment application APP-2026-0002 has been approved.",
+      "type": "success",
+      "read": false,
+      "createdAt": "2026-05-13T14:20:00Z"
+    },
+    {
+      "id": "notif-4",
+      "userId": "usr-3",
+      "title": "Correction Required",
+      "message": "Your high school certificate document is invalid. Please check comments and re-upload.",
+      "type": "warning",
+      "read": false,
+      "createdAt": "2026-05-14T11:45:00Z"
+    }
+  ],
+  "enrollmentPeriods": [
+    {
+      "id": "period-1",
+      "academicYear": "2026-2027",
+      "startDate": "2026-06-01",
+      "endDate": "2026-08-31",
+      "status": "active"
+    }
+  ],
+  "systemStats": {
+    "totalApplications": 4,
+    "pendingReview": 1,
+    "approvedApplications": 1,
+    "rejectedApplications": 0,
+    "needCorrection": 1,
+    "draftApplications": 1
+  }
+}
