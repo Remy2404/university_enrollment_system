@@ -10,12 +10,12 @@ The project is split into 6 distinct implementation phases to ensure progressive
 
 | Phase | Title | Description | Target Files | Status |
 |---|---|---|---|---|
-| **Phase 1** | [Setup, Design System & Landing Page](file:///d:/university_enrollment_system/docs/phase-1-design-system-and-landing.md) | Base styles, theme variables, core components, and the public landing page. | `phase-1-design-system-and-landing.md` | `[ ] Not Started` |
-| **Phase 2** | [Authentication & Profile Management](file:///d:/university_enrollment_system/docs/phase-2-authentication-and-profile.md) | User authentication screens, student profile, settings, and notification system. | `phase-2-authentication-and-profile.md` | `[ ] Not Started` |
-| **Phase 3** | [Student Enrollment & Document Upload](file:///d:/university_enrollment_system/docs/phase-3-enrollment-form-and-documents.md) | Multi-step enrollment stepper form and document dropzone upload interface. | `phase-3-enrollment-form-and-documents.md` | `[ ] Not Started` |
-| **Phase 4** | [Student Dashboard & Application Tracking](file:///d:/university_enrollment_system/docs/phase-4-student-dashboard-and-tracking.md) | Student bento grid dashboard and application tracking timeline. | `phase-4-student-dashboard-and-tracking.md` | `[ ] Not Started` |
-| **Phase 5** | [Staff Dashboard & Review Portal](file:///d:/university_enrollment_system/docs/phase-5-staff-portal-and-verification.md) | Admission staff dashboards, detail review screen, and verification panel. | `phase-5-staff-portal-and-verification.md` | `[ ] Not Started` |
-| **Phase 6** | [Admin Management & Analytics](file:///d:/university_enrollment_system/docs/phase-6-admin-management-and-analytics.md) | Academic program setup, enrollment period controller, and charts. | `phase-6-admin-management-and-analytics.md` | `[ ] Not Started` |
+| **Phase 1** | [Setup, Design System & Landing Page](file:///d:/university_enrollment_system/docs/phase-1-design-system-and-landing.md) | Base styles, theme variables, core components, and the public landing page. | `phase-1-design-system-and-landing.md` | `[x] Completed` |
+| **Phase 2** | [Authentication & Profile Management](file:///d:/university_enrollment_system/docs/phase-2-authentication-and-profile.md) | User authentication screens, student profile, settings, and notification system. | `phase-2-authentication-and-profile.md` | `[x] Completed` |
+| **Phase 3** | [Student Enrollment & Document Upload](file:///d:/university_enrollment_system/docs/phase-3-enrollment-form-and-documents.md) | Multi-step enrollment stepper form and document dropzone upload interface. | `phase-3-enrollment-form-and-documents.md` | `[x] Completed` |
+| **Phase 4** | [Student Dashboard & Application Tracking](file:///d:/university_enrollment_system/docs/phase-4-student-dashboard-and-tracking.md) | Student bento grid dashboard and application tracking timeline. | `phase-4-student-dashboard-and-tracking.md` | `[x] Completed` |
+| **Phase 5** | [Staff Dashboard & Review Portal](file:///d:/university_enrollment_system/docs/phase-5-staff-portal-and-verification.md) | Admission staff dashboards, detail review screen, and verification panel. | `phase-5-staff-portal-and-verification.md` | `[x] Completed` |
+| **Phase 6** | [Admin Management & Analytics](file:///d:/university_enrollment_system/docs/phase-6-admin-management-and-analytics.md) | Academic program setup, enrollment period controller, and charts. | `phase-6-admin-management-and-analytics.md` | `[x] Completed` |
 
 ---
 

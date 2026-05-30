@@ -60,8 +60,8 @@ Build the administrative review system for university admission staff, including
 ---
 
 ## 4. Verification Checklist
-- [ ] Data table correctly handles search queries, dropdown filtering, and pagination.
-- [ ] Tab switching transitions smoothly and renders clean, form-locked information layouts.
-- [ ] Status actions require a double confirmation modal (Poka-Yoke principle).
-- [ ] Marking a document as invalid disables the "Mark as Valid" action and prompts for a failure reason.
-- [ ] Responsive design hides non-critical columns on table on tablet/mobile screens.
+- [x] Data table correctly handles search queries, dropdown filtering, and pagination.
+- [x] Tab switching transitions smoothly and renders clean, form-locked information layouts.
+- [x] Status actions require a double confirmation modal (Poka-Yoke principle).
+- [x] Marking a document as invalid disables the "Mark as Valid" action and prompts for a failure reason.
+- [x] Responsive design hides non-critical columns on table on tablet/mobile screens.

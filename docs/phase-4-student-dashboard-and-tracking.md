@@ -50,8 +50,8 @@ Arrange the main portal home as a bento layout of grids (2-column on tablet, 3 o
 ---
 
 ## 4. Verification Checklist
-- [ ] Bento Grid cards adjust columns count correctly at breakpoints (`sm`, `md`, `lg`).
-- [ ] Circular progress indicator shows accurate completion percentages.
-- [ ] Timeline steps highlight the current status and hide future step contents.
-- [ ] Reviewer comments display conditionally only if present in application state data.
-- [ ] Actions from dashboard redirect to correct form steps or pages.
+- [x] Bento Grid cards adjust columns count correctly at breakpoints (`sm`, `md`, `lg`).
+- [x] Circular progress indicator shows accurate completion percentages.
+- [x] Timeline steps highlight the current status and hide future step contents.
+- [x] Reviewer comments display conditionally only if present in application state data.
+- [x] Actions from dashboard redirect to correct form steps or pages.

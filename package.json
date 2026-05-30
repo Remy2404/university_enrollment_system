@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "mock:api": "json-server mock-api/db.json --port 3001",
+    "dev:all": "concurrently \"npm run dev\" \"npm run mock:api\"",
     "start": "next start",
+    "format": "prettier --write .",
     "lint": "eslint"
   },
   "dependencies": {
@@ -31,16 +34,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@tanstack/react-query-devtools": "^5.100.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "concurrently": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "json-server": "1.0.0-beta.15",
-    "prettier": "^3.8.3",
-    "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

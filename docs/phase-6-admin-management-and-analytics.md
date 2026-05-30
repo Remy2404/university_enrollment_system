@@ -47,8 +47,8 @@ Visual grid showing analytical reports of current enrollments.
 ---
 
 ## 4. Verification Checklist
-- [ ] CRUD dialogs validate all fields before submitting (non-empty name, positive values).
-- [ ] Active academic period banner reflects changes globally if modified in settings.
-- [ ] Admin pages are restricted to Admin role permissions (simulated check).
-- [ ] Chart displays render cleanly and scale properly inside Bento Card containers.
-- [ ] Deletion safety guard verifies that a department cannot be deleted if active majors are mapped to it.
+- [x] CRUD dialogs validate all fields before submitting (non-empty name, positive values).
+- [x] Active academic period banner reflects changes globally if modified in settings.
+- [x] Admin pages are restricted to Admin role permissions (simulated check).
+- [x] Chart displays render cleanly and scale properly inside Bento Card containers.
+- [x] Deletion safety guard verifies that a department cannot be deleted if active majors are mapped to it.

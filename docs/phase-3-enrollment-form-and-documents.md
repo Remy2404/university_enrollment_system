@@ -64,9 +64,9 @@ Use a wizard layout wrapping all fields inside 6 progress steps.
 ---
 
 ## 4. Verification Checklist
-- [ ] Steps must enforce mandatory fields validation before moving forward.
-- [ ] Faculty select change updates Major select choices dynamically.
-- [ ] Review step shows accurate information inputted from previous steps.
-- [ ] Dropzone accepts drag-and-drop files and rejects unsupported file extensions.
-- [ ] Large files (>5MB) trigger an error message and block uploading.
-- [ ] Status badges colors correspond correctly to specification rules.
+- [x] Steps must enforce mandatory fields validation before moving forward.
+- [x] Faculty select change updates Major select choices dynamically.
+- [x] Review step shows accurate information inputted from previous steps.
+- [x] Dropzone accepts drag-and-drop files and rejects unsupported file extensions.
+- [x] Large files (>5MB) trigger an error message and block uploading.
+- [x] Status badges colors correspond correctly to specification rules.
