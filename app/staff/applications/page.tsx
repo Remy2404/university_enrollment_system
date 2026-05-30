@@ -205,48 +205,99 @@ export default function StaffApplicationsPage() {
             <p className="text-xs">No records match your selected search and filter criteria.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-[#E2E8F0] text-xs font-bold text-cool-gray">
-                  <th className="py-4 px-6">ID</th>
-                  <th className="py-4 px-6">Student Name</th>
-                  <th className="py-4 px-6">Target Faculty</th>
-                  <th className="py-4 px-6">Shift</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6">Last Updated</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs text-academic-blue divide-y divide-[#E2E8F0]">
-                {applications.map((app) => {
-                  const facName = faculties.find(f => f.id === app.programSelection?.facultyId)?.name || "Not Selected";
-                  return (
-                    <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-4 px-6 font-mono font-bold text-primary-navy">
-                        {app.id}
-                      </td>
-                      <td className="py-4 px-6 font-semibold">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-[#E2E8F0] text-xs font-bold text-cool-gray">
+                    <th className="py-4 px-6">ID</th>
+                    <th className="py-4 px-6">Student Name</th>
+                    <th className="py-4 px-6">Target Faculty</th>
+                    <th className="py-4 px-6">Shift</th>
+                    <th className="py-4 px-6">Status</th>
+                    <th className="py-4 px-6">Last Updated</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="text-xs text-academic-blue divide-y divide-[#E2E8F0]">
+                  {applications.map((app) => {
+                    const facName = faculties.find(f => f.id === app.programSelection?.facultyId)?.name || "Not Selected";
+                    return (
+                      <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 px-6 font-mono font-bold text-primary-navy">
+                          {app.id}
+                        </td>
+                        <td className="py-4 px-6 font-semibold">
+                          {app.personalInfo.fullName || "Draft Applicant"}
+                        </td>
+                        <td className="py-4 px-6 truncate max-w-[180px]">
+                          {facName}
+                        </td>
+                        <td className="py-4 px-6 capitalize">
+                          {app.programSelection?.shift || "—"}
+                        </td>
+                        <td className="py-4 px-6">
+                          <StatusBadge status={app.status as EnrollmentStatus} />
+                        </td>
+                        <td className="py-4 px-6 text-cool-gray">
+                          {new Date(app.updatedAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 px-6 text-right space-x-2 shrink-0">
+                          <Button 
+                            variant="secondary" 
+                            onClick={() => router.push(`/staff/review/${app.id}`)}
+                            className="h-8 px-2 text-xs"
+                            title="Review Details"
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            Review
+                          </Button>
+                          <Button 
+                            variant="secondary" 
+                            onClick={() => router.push(`/staff/verify/${app.id}`)}
+                            className="h-8 px-2 text-xs border-emerald-200 text-success-green hover:bg-emerald-50"
+                            title="Verify Documents"
+                          >
+                            <CheckSquare className="w-3.5 h-3.5 mr-1" />
+                            Verify Docs
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="md:hidden divide-y divide-[#E2E8F0] text-xs text-academic-blue">
+              {applications.map((app) => {
+                const facName = faculties.find(f => f.id === app.programSelection?.facultyId)?.name || "Not Selected";
+                return (
+                  <div key={app.id} className="p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono font-bold text-primary-navy">{app.id}</span>
+                      <span className="text-cool-gray">{new Date(app.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="font-bold text-sm text-academic-blue">
                         {app.personalInfo.fullName || "Draft Applicant"}
-                      </td>
-                      <td className="py-4 px-6 truncate max-w-[180px]">
-                        {facName}
-                      </td>
-                      <td className="py-4 px-6 capitalize">
-                        {app.programSelection?.shift || "—"}
-                      </td>
-                      <td className="py-4 px-6">
-                        <StatusBadge status={app.status as EnrollmentStatus} />
-                      </td>
-                      <td className="py-4 px-6 text-cool-gray">
-                        {new Date(app.updatedAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 px-6 text-right space-x-2 shrink-0">
+                      </div>
+                      <div className="text-slate-gray">
+                        <span className="font-semibold">Faculty:</span> {facName}
+                      </div>
+                      <div className="text-slate-gray capitalize">
+                        <span className="font-semibold">Shift:</span> {app.programSelection?.shift || "—"}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center pt-1">
+                      <StatusBadge status={app.status as EnrollmentStatus} />
+                      <div className="flex gap-2">
                         <Button 
                           variant="secondary" 
                           onClick={() => router.push(`/staff/review/${app.id}`)}
                           className="h-8 px-2 text-xs"
-                          title="Review Details"
                         >
                           <Eye className="w-3.5 h-3.5 mr-1" />
                           Review
@@ -255,18 +306,17 @@ export default function StaffApplicationsPage() {
                           variant="secondary" 
                           onClick={() => router.push(`/staff/verify/${app.id}`)}
                           className="h-8 px-2 text-xs border-emerald-200 text-success-green hover:bg-emerald-50"
-                          title="Verify Documents"
                         >
                           <CheckSquare className="w-3.5 h-3.5 mr-1" />
-                          Verify Docs
+                          Verify
                         </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Pagination Bar */}

@@ -177,7 +177,7 @@ export default function StaffReviewDetailPage() {
         <div className="lg:col-span-2 space-y-4">
           <BentoCard className="p-0 overflow-hidden">
             {/* Tabs Header */}
-            <div className="flex border-b border-[#E2E8F0] bg-slate-50 overflow-x-auto">
+            <div className="flex border-b border-[#E2E8F0] bg-slate-50 overflow-x-auto whitespace-nowrap scrollbar-none">
               {[
                 { id: "overview", label: "Overview", icon: ClipboardList },
                 { id: "personal", label: "Personal Profile", icon: User },
@@ -191,7 +191,7 @@ export default function StaffReviewDetailPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                    className={`flex items-center gap-1.5 px-5 py-4 text-xs font-bold border-b-2 transition-all ${
+                    className={`flex items-center gap-1.5 px-5 py-4 text-xs font-bold border-b-2 transition-all whitespace-nowrap ${
                       active 
                         ? "border-primary-navy text-primary-navy bg-white" 
                         : "border-transparent text-slate-gray hover:text-primary-navy hover:bg-slate-100/50"

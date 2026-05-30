@@ -105,6 +105,7 @@ export interface ApplicationDocument {
   status: "not_uploaded" | "uploaded" | "under_review" | "valid" | "invalid";
   uploadedAt: string | null;
   rejectReason: string;
+  storagePath?: string;
 }
 
 export interface ReviewNote {

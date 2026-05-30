@@ -25,6 +25,9 @@ import { LoadingState } from "../../components/ui/States";
 import { profileService } from "@/src/services/profile";
 import { userService } from "@/src/services/user";
 import { useAuth } from "@/src/providers/auth-provider";
+import { applicationService, documentService } from "@/src/services/application";
+import { createClient } from "@/src/lib/supabase/client";
+import type { Application } from "@/src/types";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -54,19 +57,31 @@ export default function ProfilePage() {
     city: "",
   });
 
+  const [appRecord, setAppRecord] = useState<Application | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+
   async function fetchProfileData(uid: string) {
     try {
-      const details = await profileService.getByStudentId(uid);
+      const [details, app] = await Promise.all([
+        profileService.getByStudentId(uid),
+        applicationService.getByStudentId(uid)
+      ]);
+
+      setAppRecord(app);
+
+      const appPersonal = app?.personalInfo;
+      const appContact = app?.contactInfo;
+
       setProfile({
-        fullName: user?.name ?? "",
-        gender: details.gender || "Male",
-        dateOfBirth: details.dateOfBirth,
-        nationalId: details.nationalId,
-        nationality: details.nationality || "Cambodian",
-        phone: details.phone || user?.phoneNumber || "",
-        email: user?.email ?? details.email,
-        address: details.address,
-        city: details.city,
+        fullName: user?.name || appPersonal?.fullName || "",
+        gender: details.gender || appPersonal?.gender || "Male",
+        dateOfBirth: details.dateOfBirth || appPersonal?.dateOfBirth || "",
+        nationalId: details.nationalId || appPersonal?.nationalId || "",
+        nationality: details.nationality || appPersonal?.nationality || "Cambodian",
+        phone: details.phone || user?.phoneNumber || appContact?.phone || "",
+        email: user?.email || details.email || appContact?.email || "",
+        address: details.address || appContact?.address || "",
+        city: details.city || appContact?.city || "",
       });
     } catch {
       toast.error("Failed to load profile.");
@@ -74,6 +89,95 @@ export default function ProfilePage() {
       setIsLoading(false);
     }
   }
+
+  // Load avatar preview URL
+  useEffect(() => {
+    if (user?.avatarUrl) {
+      if (user.avatarUrl.startsWith("http")) {
+        const timeoutId = window.setTimeout(() => {
+          setAvatarPreviewUrl(user.avatarUrl ?? "");
+        }, 0);
+        return () => window.clearTimeout(timeoutId);
+      } else {
+        const fetchAvatarUrl = async () => {
+          try {
+            const supabase = createClient();
+            const { data } = await supabase.storage
+              .from("application-documents")
+              .createSignedUrl(user.avatarUrl, 60 * 60);
+            setAvatarPreviewUrl(data?.signedUrl ?? "");
+          } catch (err) {
+            console.error("Failed to load avatar url", err);
+            setAvatarPreviewUrl("");
+          }
+        };
+        const timeoutId = window.setTimeout(() => void fetchAvatarUrl(), 0);
+        return () => window.clearTimeout(timeoutId);
+      }
+    } else {
+      const timeoutId = window.setTimeout(() => {
+        setAvatarPreviewUrl("");
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+  }, [user?.avatarUrl]);
+
+  const handleAvatarClick = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        await handleAvatarUpload(file);
+      }
+    };
+    fileInput.click();
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    setIsSaving(true);
+    const loadingToastId = toast.loading("Uploading profile photo...");
+    try {
+      let app = appRecord;
+      if (!app) {
+        app = await applicationService.getOrCreateDraft({
+          studentId: user.id,
+          studentName: user.name,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+        });
+        setAppRecord(app);
+      }
+
+      const doc = await documentService.upload({
+        applicationId: app.id,
+        studentId: user.id,
+        type: "student_photo",
+        file,
+      });
+
+      if (doc.storagePath) {
+        await userService.update(user.id, {
+          name: profile.fullName,
+          phoneNumber: profile.phone,
+          avatarUrl: doc.storagePath,
+        });
+        await refreshProfile();
+        toast.dismiss(loadingToastId);
+        toast.success("Profile photo uploaded successfully.");
+      } else {
+        throw new Error("Missing storage path in uploaded document");
+      }
+    } catch (err) {
+      console.error("Avatar upload failed", err);
+      toast.dismiss(loadingToastId);
+      toast.error(err instanceof Error ? err.message : "Failed to upload profile photo.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -197,17 +301,28 @@ export default function ProfilePage() {
       {/* Avatar & Name Header */}
       <BentoCard className="flex items-center gap-6">
         <div className="relative">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-soft-blue text-2xl font-bold text-primary-navy border-2 border-primary-navy/10">
-            {profile.fullName
-              ? profile.fullName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-              : "SD"}
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-soft-blue text-2xl font-bold text-primary-navy border-2 border-primary-navy/10 overflow-hidden">
+            {avatarPreviewUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={avatarPreviewUrl} alt={profile.fullName} className="h-full w-full object-cover" />
+            ) : (
+              profile.fullName
+                ? profile.fullName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                : "SD"
+            )}
           </div>
           {isEditing && (
-            <button className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary-navy text-white shadow-sm hover:bg-academic-blue transition-colors">
+            <button 
+              type="button"
+              onClick={handleAvatarClick}
+              disabled={isSaving}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary-navy text-white shadow-sm hover:bg-academic-blue transition-colors focus:outline-none"
+              aria-label="Upload profile photo"
+            >
               <Camera className="w-3.5 h-3.5" />
             </button>
           )}

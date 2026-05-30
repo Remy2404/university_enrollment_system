@@ -214,7 +214,8 @@ export default function AdminProgramsPage() {
       </div>
 
       {/* Tabs list */}
-      <div className="flex border-b border-[#E2E8F0] space-x-2">
+      {/* Tabs list */}
+      <div className="flex border-b border-[#E2E8F0] space-x-2 overflow-x-auto whitespace-nowrap scrollbar-none">
         {([
           { id: "faculties", label: "Faculties", icon: Building2 },
           { id: "departments", label: "Departments", icon: Layers },
@@ -226,7 +227,7 @@ export default function AdminProgramsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-5 py-3 text-xs font-bold border-b-2 transition-all ${
+              className={`flex items-center gap-1.5 px-5 py-3 text-xs font-bold border-b-2 transition-all whitespace-nowrap ${
                 active 
                   ? "border-primary-navy text-primary-navy bg-white" 
                   : "border-transparent text-slate-gray hover:text-primary-navy hover:bg-slate-50"
@@ -241,75 +242,28 @@ export default function AdminProgramsPage() {
 
       {/* Content Panels */}
       <BentoCard className="p-0 overflow-hidden">
-        
-        {/* Panel 1: Faculties Table */}
-        {activeTab === "faculties" && (
-          <table className="w-full text-left border-collapse text-xs text-academic-blue">
-            <thead>
-              <tr className="bg-slate-50 border-b border-[#E2E8F0] text-cool-gray font-bold">
-                <th className="py-4 px-6">Faculty Code</th>
-                <th className="py-4 px-6">Faculty Name</th>
-                <th className="py-4 px-6">Description</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {faculties.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50">
-                  <td className="py-4 px-6 font-mono font-bold text-primary-navy">{item.code}</td>
-                  <td className="py-4 px-6 font-bold">{item.name}</td>
-                  <td className="py-4 px-6 text-slate-gray truncate max-w-[200px]">{item.description}</td>
-                  <td className="py-4 px-6">
-                    <button 
-                      onClick={() => handleToggleStatus("faculty", item)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold border text-[10px] cursor-pointer ${
-                        item.status === "active" 
-                          ? "bg-success-light text-success-green border-success-light" 
-                          : "bg-gray-100 text-cool-gray border-gray-200"
-                      }`}
-                    >
-                      {item.status === "active" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                      {item.status.toUpperCase()}
-                    </button>
-                  </td>
-                  <td className="py-4 px-6 text-right space-x-2">
-                    <Button variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => handleOpenEdit(item)}>
-                      <Edit className="w-3 h-3 mr-1" /> Edit
-                    </Button>
-                    <Button variant="secondary" className="h-7 px-2 text-[10px] border-red-100 text-error-red hover:bg-red-50" onClick={() => handleDeleteTrigger("faculty", item.id)}>
-                      <Trash2 className="w-3 h-3 mr-1" /> Delete
-                    </Button>
-                  </td>
+        <div className="overflow-x-auto">
+          {/* Panel 1: Faculties Table */}
+          {activeTab === "faculties" && (
+            <table className="w-full text-left border-collapse text-xs text-academic-blue min-w-[650px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-[#E2E8F0] text-cool-gray font-bold">
+                  <th className="py-4 px-6">Faculty Code</th>
+                  <th className="py-4 px-6">Faculty Name</th>
+                  <th className="py-4 px-6">Description</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        {/* Panel 2: Departments Table */}
-        {activeTab === "departments" && (
-          <table className="w-full text-left border-collapse text-xs text-academic-blue">
-            <thead>
-              <tr className="bg-slate-50 border-b border-[#E2E8F0] text-cool-gray font-bold">
-                <th className="py-4 px-6">Department Name</th>
-                <th className="py-4 px-6">Parent Faculty</th>
-                <th className="py-4 px-6">Description</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {departments.map((item) => {
-                const facName = faculties.find(f => f.id === item.facultyId)?.name || "Unknown Faculty";
-                return (
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {faculties.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/50">
+                    <td className="py-4 px-6 font-mono font-bold text-primary-navy">{item.code}</td>
                     <td className="py-4 px-6 font-bold">{item.name}</td>
-                    <td className="py-4 px-6 font-semibold text-primary-navy truncate max-w-[150px]">{facName}</td>
                     <td className="py-4 px-6 text-slate-gray truncate max-w-[200px]">{item.description}</td>
                     <td className="py-4 px-6">
                       <button 
-                        onClick={() => handleToggleStatus("department", item)}
+                        onClick={() => handleToggleStatus("faculty", item)}
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold border text-[10px] cursor-pointer ${
                           item.status === "active" 
                             ? "bg-success-light text-success-green border-success-light" 
@@ -324,65 +278,112 @@ export default function AdminProgramsPage() {
                       <Button variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => handleOpenEdit(item)}>
                         <Edit className="w-3 h-3 mr-1" /> Edit
                       </Button>
-                      <Button variant="secondary" className="h-7 px-2 text-[10px] border-red-100 text-error-red hover:bg-red-50" onClick={() => handleDeleteTrigger("department", item.id)}>
+                      <Button variant="secondary" className="h-7 px-2 text-[10px] border-red-100 text-error-red hover:bg-red-50" onClick={() => handleDeleteTrigger("faculty", item.id)}>
                         <Trash2 className="w-3 h-3 mr-1" /> Delete
                       </Button>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+                ))}
+              </tbody>
+            </table>
+          )}
 
-        {/* Panel 3: Majors Table */}
-        {activeTab === "majors" && (
-          <table className="w-full text-left border-collapse text-xs text-academic-blue">
-            <thead>
-              <tr className="bg-slate-50 border-b border-[#E2E8F0] text-cool-gray font-bold">
-                <th className="py-4 px-6">Major Name</th>
-                <th className="py-4 px-6">Parent Department</th>
-                <th className="py-4 px-6">Description</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {majors.map((item) => {
-                const deptName = departments.find(d => d.id === item.departmentId)?.name || "Unknown Department";
-                return (
-                  <tr key={item.id} className="hover:bg-slate-50/50">
-                    <td className="py-4 px-6 font-bold">{item.name}</td>
-                    <td className="py-4 px-6 font-semibold text-primary-navy truncate max-w-[150px]">{deptName}</td>
-                    <td className="py-4 px-6 text-slate-gray truncate max-w-[200px]">{item.description}</td>
-                    <td className="py-4 px-6">
-                      <button 
-                        onClick={() => handleToggleStatus("major", item)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold border text-[10px] cursor-pointer ${
-                          item.status === "active" 
-                            ? "bg-success-light text-success-green border-success-light" 
-                            : "bg-gray-100 text-cool-gray border-gray-200"
-                        }`}
-                      >
-                        {item.status === "active" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                        {item.status.toUpperCase()}
-                      </button>
-                    </td>
-                    <td className="py-4 px-6 text-right space-x-2">
-                      <Button variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => handleOpenEdit(item)}>
-                        <Edit className="w-3 h-3 mr-1" /> Edit
-                      </Button>
-                      <Button variant="secondary" className="h-7 px-2 text-[10px] border-red-100 text-error-red hover:bg-red-50" onClick={() => handleDeleteTrigger("major", item.id)}>
-                        <Trash2 className="w-3 h-3 mr-1" /> Delete
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+          {/* Panel 2: Departments Table */}
+          {activeTab === "departments" && (
+            <table className="w-full text-left border-collapse text-xs text-academic-blue min-w-[650px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-[#E2E8F0] text-cool-gray font-bold">
+                  <th className="py-4 px-6">Department Name</th>
+                  <th className="py-4 px-6">Parent Faculty</th>
+                  <th className="py-4 px-6">Description</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {departments.map((item) => {
+                  const facName = faculties.find(f => f.id === item.facultyId)?.name || "Unknown Faculty";
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/50">
+                      <td className="py-4 px-6 font-bold">{item.name}</td>
+                      <td className="py-4 px-6 font-semibold text-primary-navy truncate max-w-[150px]">{facName}</td>
+                      <td className="py-4 px-6 text-slate-gray truncate max-w-[200px]">{item.description}</td>
+                      <td className="py-4 px-6">
+                        <button 
+                          onClick={() => handleToggleStatus("department", item)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold border text-[10px] cursor-pointer ${
+                            item.status === "active" 
+                              ? "bg-success-light text-success-green border-success-light" 
+                              : "bg-gray-100 text-cool-gray border-gray-200"
+                          }`}
+                        >
+                          {item.status === "active" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {item.status.toUpperCase()}
+                        </button>
+                      </td>
+                      <td className="py-4 px-6 text-right space-x-2">
+                        <Button variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => handleOpenEdit(item)}>
+                          <Edit className="w-3 h-3 mr-1" /> Edit
+                        </Button>
+                        <Button variant="secondary" className="h-7 px-2 text-[10px] border-red-100 text-error-red hover:bg-red-50" onClick={() => handleDeleteTrigger("department", item.id)}>
+                          <Trash2 className="w-3 h-3 mr-1" /> Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
 
+          {/* Panel 3: Majors Table */}
+          {activeTab === "majors" && (
+            <table className="w-full text-left border-collapse text-xs text-academic-blue min-w-[650px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-[#E2E8F0] text-cool-gray font-bold">
+                  <th className="py-4 px-6">Major Name</th>
+                  <th className="py-4 px-6">Parent Department</th>
+                  <th className="py-4 px-6">Description</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {majors.map((item) => {
+                  const deptName = departments.find(d => d.id === item.departmentId)?.name || "Unknown Department";
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/50">
+                      <td className="py-4 px-6 font-bold">{item.name}</td>
+                      <td className="py-4 px-6 font-semibold text-primary-navy truncate max-w-[150px]">{deptName}</td>
+                      <td className="py-4 px-6 text-slate-gray truncate max-w-[200px]">{item.description}</td>
+                      <td className="py-4 px-6">
+                        <button 
+                          onClick={() => handleToggleStatus("major", item)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold border text-[10px] cursor-pointer ${
+                            item.status === "active" 
+                              ? "bg-success-light text-success-green border-success-light" 
+                              : "bg-gray-100 text-cool-gray border-gray-200"
+                          }`}
+                        >
+                          {item.status === "active" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {item.status.toUpperCase()}
+                        </button>
+                      </td>
+                      <td className="py-4 px-6 text-right space-x-2">
+                        <Button variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => handleOpenEdit(item)}>
+                          <Edit className="w-3 h-3 mr-1" /> Edit
+                        </Button>
+                        <Button variant="secondary" className="h-7 px-2 text-[10px] border-red-100 text-error-red hover:bg-red-50" onClick={() => handleDeleteTrigger("major", item.id)}>
+                          <Trash2 className="w-3 h-3 mr-1" /> Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </BentoCard>
 
       {/* CRUD Add/Edit Modal */}

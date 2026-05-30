@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -19,19 +19,18 @@ import {
   BarChart3,
   CheckSquare,
   Settings,
-  Menu,
-  X,
 } from "lucide-react";
 import { useAuth } from "@/src/providers/auth-provider";
 
 interface AppSidebarProps {
   role?: "student" | "staff" | "admin";
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
-export function AppSidebar({ role = "student" }: AppSidebarProps) {
+export function AppSidebar({ role = "student", isOpen, setIsOpen }: AppSidebarProps) {
   const pathname = usePathname();
   const { signOut } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
 
   const studentNav = [
     { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
@@ -64,30 +63,13 @@ export function AppSidebar({ role = "student" }: AppSidebarProps) {
       ? staffNav
       : adminNav;
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
-
   return (
     <>
-      {/* Mobile Header Menu Trigger */}
-      <header className="flex h-16 items-center justify-between border-b border-[#E2E8F0] bg-white px-4 lg:hidden">
-        <Link href="/" className="flex items-center gap-2 font-bold text-primary-navy">
-          <GraduationCap className="w-6 h-6" />
-          <span className="text-md">Academia UES</span>
-        </Link>
-        <button
-          onClick={toggleSidebar}
-          className="flex h-10 w-10 items-center justify-center rounded-md border border-[#E2E8F0] text-primary-navy"
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </header>
-
       {/* Drawer Overlay for Mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs lg:hidden"
-          onClick={toggleSidebar}
+          onClick={() => setIsOpen(false)}
         />
       )}
 

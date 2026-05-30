@@ -111,7 +111,7 @@ export default function StaffDashboardPage() {
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
         <BentoCard className="p-5 flex flex-col justify-between" hoverEffect={false}>
           <span className="text-[10px] uppercase font-bold text-cool-gray">Total Applications</span>
           <div className="flex items-baseline gap-2 mt-2">

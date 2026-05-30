@@ -117,13 +117,17 @@ export default function StudentStatusPage() {
 
       {/* Main Status Bento Card */}
       <BentoCard className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-cool-gray">APPLICATION ID:</span>
-            <code className="font-mono text-xs font-bold text-primary-navy px-2 py-0.5 bg-slate-100 rounded-md">
-              {appRecord.id}
-            </code>
-            <StatusBadge status={appRecord.status as EnrollmentStatus} />
+        <div className="space-y-2 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="text-xs font-semibold text-cool-gray uppercase tracking-wider whitespace-nowrap">Application ID:</span>
+              <code className="font-mono text-[10px] sm:text-xs font-bold text-primary-navy px-2 py-0.5 bg-slate-100 rounded-md break-all select-all max-w-full sm:max-w-none">
+                {appRecord.id}
+              </code>
+            </div>
+            <div className="sm:border-l sm:border-slate-200 sm:pl-3 shrink-0">
+              <StatusBadge status={appRecord.status as EnrollmentStatus} />
+            </div>
           </div>
           <h2 className="text-xl font-bold text-academic-blue">
             {appRecord.status === "draft" && "Finish filling out your enrollment details"}
@@ -176,7 +180,7 @@ export default function StudentStatusPage() {
               return (
                 <div key={idx} className="relative">
                   {/* Timeline Dot Indicator */}
-                  <span className="absolute -left-[33px] top-0 flex items-center justify-center w-6 h-6 rounded-full bg-white border-2">
+                  <span className="absolute -left-[37px] top-0 flex items-center justify-center w-6 h-6 rounded-full bg-white border-2">
                     {state === "completed" && (
                       <span className="w-4 h-4 rounded-full bg-success-green flex items-center justify-center">
                         <CheckCircle2 className="w-3.5 h-3.5 text-white" />

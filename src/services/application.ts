@@ -383,6 +383,7 @@ async function createSignedDocument(row: DocumentRow): Promise<ApplicationDocume
     status: toUiDocumentStatus(row.status),
     uploadedAt: row.uploaded_at,
     rejectReason: row.reject_reason ?? "",
+    storagePath: row.storage_path,
   };
 }
 

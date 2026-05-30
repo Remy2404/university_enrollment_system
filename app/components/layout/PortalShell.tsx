@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 import { useAuth } from "@/src/providers/auth-provider";
@@ -23,7 +23,9 @@ export function PortalShell({
   allowedRoles: PortalRole[];
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -31,12 +33,15 @@ export function PortalShell({
       router.replace("/login");
       return;
     }
-    if (!allowedRoles.includes(user.role)) {
+    
+    // Admin is allowed to access settings under student route
+    const isAllowed = allowedRoles.includes(user.role) || (user.role === "admin" && pathname === "/student/settings");
+    if (!isAllowed) {
       router.replace(defaultRoute[user.role]);
     }
-  }, [allowedRoles, loading, router, user]);
+  }, [allowedRoles, loading, router, user, pathname]);
 
-  if (loading || !user || !allowedRoles.includes(user.role)) {
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC]">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-navy" />
@@ -44,13 +49,23 @@ export function PortalShell({
     );
   }
 
+  const isAllowed = allowedRoles.includes(user.role) || (user.role === "admin" && pathname === "/student/settings");
+  if (!isAllowed) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <AppSidebar role={user.role} />
+      <AppSidebar role={user.role} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar userName={user.name} userRole={user.role} />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">{children}</main>
+        <TopBar 
+          userName={user.name} 
+          userRole={user.role} 
+          onMenuClick={() => setSidebarOpen(true)} 
+        />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );
 }
+

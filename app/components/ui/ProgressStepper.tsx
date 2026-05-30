@@ -18,13 +18,21 @@ export function ProgressStepper({
   return (
     <div className="w-full" aria-label="Progress tracker">
       {/* Mobile progress label */}
-      <div className="flex justify-between items-center mb-4 lg:hidden text-sm">
-        <span className="text-cool-gray font-medium">
-          Step {currentStep} of {steps.length}
-        </span>
-        <span className="font-bold text-primary-navy">
-          {steps[currentStep - 1]}
-        </span>
+      <div className="flex flex-col gap-2 mb-4 lg:hidden text-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-cool-gray font-medium">
+            Step {currentStep} of {steps.length}
+          </span>
+          <span className="font-bold text-primary-navy">
+            {steps[currentStep - 1]}
+          </span>
+        </div>
+        <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
+          <div
+            className="bg-primary-navy h-1.5 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / steps.length) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Stepper bar */}
